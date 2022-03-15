@@ -2,9 +2,9 @@
 
 ### v1.0 Feature List
 - [x] Directory Traversal
-- [ ] Defaults / Checks
-- [ ] File IO
-- [ ] DuckyScript Parsing
+- [x] Defaults / Checks
+- [x] File IO
+- [x] DuckyScript Parsing
 - [ ] Web Access
 
 ### Future Features
