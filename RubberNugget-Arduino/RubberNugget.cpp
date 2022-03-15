@@ -2,7 +2,7 @@
 #define dn 18 // right button
 #define lt 11 // left button
 #define rt 7 // right button
-
+    
 #include "RubberNugget.h"
 #include "Arduino.h"
 
@@ -11,6 +11,12 @@
 
 #include "SH1106Wire.h"
 #include "graphics.h"
+#include "keyboardlayout.h"
+#include <Adafruit_NeoPixel.h>
+
+
+extern Adafruit_NeoPixel pixels;
+
 SH1106Wire display(0x3C, 33, 35);
 
 Nugget_Buttons nuggButtons(up,dn,lt,rt);
@@ -19,7 +25,9 @@ Nugget_Buttons nuggButtons(up,dn,lt,rt);
 #include "cdcusb.h"
 #include "mscusb.h"
 #include "flashdisk.h"
+#include "hidkeyboard.h"
 
+HIDkeyboard keyboard;
 CDCusb CDCUSBSerial;
 FlashUSB fat1;
 
@@ -64,12 +72,25 @@ class Device: public USBCallbacks {
     void onResume() { Serial.println("Resume"); }
 };
 
+class MyHIDCallbacks : public HIDCallbacks
+{
+    void onData(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
+    {
+        Serial.printf("ID: %d, type: %d, size: %d\n", report_id, (int)report_type, bufsize);
+        for (size_t i = 0; i < bufsize; i++)
+        {
+            Serial.printf("%d\n", buffer[i]);
+        }
+    }
+};
+
 void echo_all(char c) {
     CDCUSBSerial.write(c);
     Serial.write(c);
 }
 
 /*-----------------------------------------------------------------*/
+
 Nugget_Interface payloadSelector;
 Nugget_Interface payloadRun;
   
@@ -79,11 +100,22 @@ RubberNugget::RubberNugget() {
 
 // set up defaults
 void RubberNugget::init() {
-
+    pixels.begin(); delay(200);
+    pixels.clear();     
+    
+    pixels.setPixelColor(0, pixels.Color(0,0, 0)); pixels.show();
+    pixels.setBrightness(50);
+    pixels.show();
+    
+    
     display.init();
     display.flipScreenVertically();
     display.setTextAlignment(TEXT_ALIGN_LEFT);
     display.setFont(DejaVu_Sans_Mono_10);
+
+    keyboard.setBaseEP(3);
+    keyboard.begin();
+    keyboard.setCallbacks(new MyHIDCallbacks());
 
   // mount FAT fs
   if (fat1.init("/fat1", "ffat")) {
@@ -114,33 +146,187 @@ void RubberNugget::init() {
     }    
 }
 
+bool keyKnown (String keyPress) {
+  Serial.print("looking for: ");
+  Serial.println(keyPress);
+  for (int i=0; i< (sizeof(keyMapRN)/sizeof(keyMapRN[0])); i++) {
+    if (keyPress.equals(keyMapRN[i].title)) {
+      Serial.println(keyMapRN[i].title);
+      Serial.println(" found!");
+      return true;
+    }
+  }
+  return false;
+}
 
-// return 4
+void pressKey(String keyPress) {
+  delay(2);
+  for (int i=0; i< (sizeof(keyMapRN)/sizeof(keyMapRN[0])); i++) {
+    if (keyPress.equals(keyMapRN[i].title)) {
+      keyboard.sendPress(keyMapRN[i].key);
+    }
+  }
+}
+
+void processDuckyScript(String ducky) {
+  String tCommand = ducky.substring(0, ducky.indexOf(' ')); // get command
+  tCommand.toUpperCase(); tCommand.trim();
+
+  ::display.clear();
+  payloadRun.addFooter("RUNNING payload");
+  payloadRun.updateDisplay();
+  
+  if (tCommand.equals("REM")) {
+    Serial.println("Comment");
+  }
+  else if (tCommand.equals("DELAY")) {
+    ::display.drawString(3,12,"DELAY: ");
+    ::display.drawString(3,22,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
+    ::display.drawXbm(0, 0, 128, 64, reload_bits);
+    payloadRun.updateDisplay();
+    delay(ducky.substring(ducky.indexOf(' ')+1, ducky.length()).toInt()); // delay in MS
+    Serial.println("Delayed!");
+       
+  }
+  else if (tCommand.equals("STRING")) {
+    ::display.drawString(3,12,"STRING: ");
+    if (String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())).length() > 11) {
+      ::display.drawString(3,22,String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())).substring(0,8)+"...");
+    }
+    else {
+      ::display.drawString(3,22,String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())));
+    }
+    display.drawXbm(0, 0, 128, 64, medium_signal_bits);
+    payloadRun.updateDisplay();
+    Serial.println("String");
+    keyboard.sendString(String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())));    
+  }  
+  
+  else if (keyKnown(tCommand)) {
+    ::display.drawString(3,12,"KEY PRESS:");
+    
+    if (String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())).length() > 11) {
+      ::display.drawString(3,22,String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())).substring(0,8)+"...");
+    }
+    else {
+      ::display.drawString(3,22,String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())));
+    }
+    display.drawXbm(0, 0, 128, 64, high_signal_bits);
+    payloadRun.updateDisplay();
+    pressKey(tCommand); // press first
+    
+    String duckyCurrent;
+    duckyCurrent = ducky;
+    duckyCurrent.toUpperCase();
+
+    Serial.println(duckyCurrent.indexOf(" "));
+    
+    while (duckyCurrent.indexOf(" ")>-1) {
+      
+      duckyCurrent = duckyCurrent.substring(duckyCurrent.indexOf(' ')+1, duckyCurrent.length()); // trim off next part of string
+      String dCommand = (String) duckyCurrent.substring(0,(duckyCurrent.indexOf(' ')));
+      
+      if (dCommand.length() == 1) {
+        const char* meow = dCommand.c_str();
+        uint8_t keycode = (uint8_t) meow[0];
+
+        Serial.print(meow); Serial.print("  ");
+        Serial.println(keycode);
+        Serial.println(keymap[keycode].usage);
+
+        delay(2);
+        keyboard.sendPress(keymap[keycode].usage, 0);
+      }
+      else {
+        pressKey(dCommand);
+      }
+      
+    }
+    delay(2);
+    keyboard.sendRelease();
+  }
+  else {
+    Serial.println("Command not found");
+  }
+
+  payloadRun.updateDisplay();
+}
+
+void rPayload (char* path) {
+    FRESULT fr;            
+    FIL file; 
+    uint16_t size;
+    UINT bytesRead;
+
+      
+      payloadRun.addFooter(path);
+//      payloadRun.addDashboard();
+      payloadRun.updateDisplay();
+      
+    fr = f_open(&file, path, FA_READ);
+
+    if (fr == FR_OK){
+        size = f_size(&file);
+        char * data = NULL;
+
+        data = (char*) malloc(size);
+        Serial.printf("File size: %d bytes", size);
+
+        fr = f_read(&file, data, (UINT) size, &bytesRead);
+        if (fr == FR_OK){
+            Serial.println("File successfully read!");
+            String command;
+            
+            for (int i=0; i < bytesRead; i++) {
+                if (data[i] == 0x0a) {
+                  Serial.println(command);
+                  processDuckyScript(command);
+                  command = "";
+                }
+                command+=data[i];
+            }
+            Serial.println(command);
+        }
+        free(data); // free allocated memory when you don't need it
+
+        f_close(&file);
+    }
+    ::display.clear();
+    ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
+    ::display.drawString(3,12,"Press any key");
+    ::display.drawString(3,22,"to go back");
+    ::display.drawLine(0, 54, 127, 54);
+    ::display.drawLine(0, 53, 127, 53);
+    
+    ::display.drawString(0, 54, "FINISHED payload");
+    ::display.display();
+//    ::pixels.setPixelColor(0, ::pixels.Color(0,150, 0)); ::pixels.show();
+//    pixels.clear();
+    pixels.setPixelColor(0, pixels.Color(255,0, 0)); pixels.show();
+    
+    while (!(nuggButtons.dnPressed())) {
+      nuggButtons.getPress();
+    }
+    ::display.clear();
+    pixels.setPixelColor(0, pixels.Color(0,0, 0)); pixels.show();
+}
+
 String* listDirs(char* path) {
 
   uint8_t count = 0;
   String* contents = new String[4];
-
-//  contents[0] = "Meow";
 
   res = f_opendir(&dir, path);
   if (res == FR_OK) {
         for (;;) {
             res = f_readdir(&dir, &fno);                   /* Read a directory item */
             if (res != FR_OK || fno.fname[0] == 0 || count>3) break;  /* Break on error or end of dir */
-            if (fno.fattrib & AM_DIR) {  
-//              Serial.println(fno.fname); /* It is a directory */
-              
-//                i = strlen(path);
-//                sprintf(&path[i], "/%s", fno.fname);
-//                res = scan_files(path);                    /* Enter the directory */
+            if (fno.fattrib & AM_DIR) {
                 if (res != FR_OK) break;
                 contents[count] = (String) fno.fname;
-//                contents[count] = count;
                 count++;
                 Serial.println(fno.fname);
                 Serial.println(count);
-//                path[i] = 0;
             } 
             else {                                       /* It is a file. */
                 contents[count] = (String) fno.fname;
@@ -175,11 +361,12 @@ void RubberNugget::selectPayload(char* cpath) {
 
       if (payloadPath.indexOf(".txt") !=-1 ) {
         
-        char char_array[payloadPath.length()];
-        payloadPath.toCharArray(char_array, payloadPath.length());
-    
-        runPayload(char_array);
-        return;
+        char char_array[payloadPath.length()+1];
+        payloadPath.toCharArray(char_array, payloadPath.length()+1);
+
+        runPayload(char_array); // calls runPayload with name of path
+        payloadPath="";
+//        return;
       }
       
       if (payloadPath!="/") {
@@ -200,21 +387,23 @@ void RubberNugget::selectPayload(char* cpath) {
     payloadSelector.addKeyMap(dirlisting);
     payloadSelector.addNav(selectPayload); // pass path 
     payloadSelector.addFooter(payloadPath );
-    payloadSelector.updateDisplay();
+    payloadSelector.autoUpdateDisplay();
     
     
       while (CDCUSBSerial.available()) {
         echo_all(CDCUSBSerial.read());
       }
+      
       while (Serial.available()) {
         echo_all(Serial.read());
       }
 
       delay(0);
-//    }
 }
 
-void RubberNugget::runPayload(char* path) {
-  display.drawString(54,0,"fuck you");
-  display.display();
+void RubberNugget::runPayload(char* path) {  
+  pixels.setPixelColor(0, pixels.Color(0,0, 255)); pixels.show();
+  delay(100);
+  ::rPayload(path);
+  
 }

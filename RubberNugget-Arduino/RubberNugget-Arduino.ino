@@ -1,5 +1,9 @@
 #include "RubberNugget.h"
 #include "Arduino.h"
+#include <Adafruit_NeoPixel.h>
+
+Adafruit_NeoPixel pixels {1, 12, NEO_GRB + NEO_KHZ800 };
+
 
 
 void setup() {

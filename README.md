@@ -10,3 +10,7 @@
 ### Future Features
 - [ ] Aliasing
 - [ ] Proper FS mounting / USB
+
+### Bugs
+- [ ] Keypress debouncing / key features
+- [ ] Proper input sanitation for filepaths
