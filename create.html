@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Karla:wght@400;500&family=Lato:wght@700&family=Open+Sans:wght@500&family=Roboto&display=swap');
+    </style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Karla&family=Lato:wght@700&family=Roboto&display=swap');
+
+        * {
+            font-family: "Karla";
+        }
+    </style>
+
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="materialize.min.css" media="screen,projection" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+
+<body onload="loadPayloadTables()">
+    <div>
+        <nav>
+            <div class="nav-wrapper grey darken-3">
+                <div class="container">
+                    <a href="#!" class="brand-logo">RubberNugget</a>
+                    <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+                    <ul class="right hide-on-med-and-down">
+                        <li><a href="run.html">Run</a></li>
+                        <li><a href="create.html">Create</a></li>
+                        <!-- <li><a href="about.html">About</a></li> -->
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <ul class="sidenav" id="mobile-demo">
+            <li><a href="sass.html">Sass</a></li>
+            <li><a href="badges.html">Components</a></li>
+            <li><a href="collapsible.html">Javascript</a></li>
+            <li><a href="mobile.html">Mobile</a></li>
+        </ul>
+    </div>
+
+
+    <div class="container">
+        <div style="padding-top: 3em">
+            <h5>Upload Payloads</h5>
+            <div style="padding-top: 2em">
+                <form action="#">
+                    <div class="file-field input-field">
+                        <div class="btn teal darken-2">
+                            <span><i class="material-icons right">upload</i>Select File</span>
+                            <input type="file">
+                        </div>
+                        <div class="file-path-wrapper">
+                            <input class="file-path validate" type="text">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div style="padding-top: 3em">
+            <h5>Payload Creator</h5>
+
+            <div style="padding-top: 2em">
+                <div class="row">
+
+                    <div class="input-field col l6 s12">
+                        <i class="material-icons prefix">create</i>
+                        <input id="payload_name" type="text" class="validate">
+                        <label for="payload_name">Payload Name</label>
+                    </div>
+
+                    <div class="input-field col l3 s12">
+                        <i class="material-icons prefix">info</i>
+                        <input id="payload_category" type="text" class="validate">
+                        <label for="caf">Payload Category</label>
+                    </div>
+
+                    <div class="input-field col l3 s12">
+                        <i class="material-icons prefix">computer</i>
+                        <input id="target_os" type="text" class="validate">
+                        <label for="fsdf">Target OS</label>
+                    </div>
+
+                    <div class="input-field col s12">
+                        <i class="material-icons prefix">code</i>
+                        <textarea id="textarea1" class="materialize-textarea"></textarea>
+                        <label for="textarea1">Payload Content</label>
+                    </div>
+
+                </div>
+
+            </div>
+            <a class="waves-effect waves-light btn red darken-2"><i class="material-icons right">flash_on</i>Run
+                Live</a>
+            <a class="waves-effect waves-light btn teal darken-2"><i class="material-icons right">save</i>Save</a>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    var elems = document.querySelectorAll('.modal');
+                    var options = {
+
+                    };
+                    var instances = M.Modal.init(elems, options);
+                });
+            </script>
+
+        </div>
+    </div>
+
+    <script type="text/javascript" src="materialize.min.js"></script>
+    <script type="text/javascript" src="index.js"></script>
+</body>
+
+</html>

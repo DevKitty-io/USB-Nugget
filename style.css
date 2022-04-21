@@ -1,0 +1,104 @@
+* {
+    font-family: sans-serif;
+}
+
+.container {
+    width: 70%;
+    margin: auto;
+}
+
+table {
+    width: 100%;
+    padding: .7em;
+}
+
+tr {
+    text-align: left;
+}
+
+td {
+    padding: .3em;
+}
+
+.payloadTable {
+    margin-bottom: 4em;
+}
+
+button {
+    border: none;
+    padding: .8em;
+    border-radius: 3px;
+}
+
+.run {
+    background-color: #ef5350;
+    color: white;
+}
+
+.run:hover {
+    background-color: #e57373;
+}
+
+.edit {
+    background-color: #66bb6a73;
+    color: white;
+}
+
+.edit:hover {
+    background-color: #8abe8d91;
+}
+
+textarea {
+    display: block;
+    width: 100%;
+    max-width:100%;
+    min-width: 100%;
+    margin-bottom: 1em;
+    background-color: #263238;
+    
+    color: white;
+    padding: .7em;
+    box-sizing: border-box;
+}
+
+nav {
+    max-width: 100%;
+    padding: 0 2em;
+    background-color: #263238;
+}
+
+table, textarea {
+    border-radius: 5px;
+    background-color: #263238;
+    border: 1px solid #25282c;
+}
+
+nav a {
+    display: inline-block;
+    padding: .9em;     
+    color: #e4e4e4;
+    text-decoration: none;
+}
+
+nav a:hover {
+    background-color: #222529;
+    cursor: pointer;
+}
+
+td {
+    width: 200px !important;
+}
+
+body {
+    margin: 0;
+    background-color: #36393e;
+    color: #e4e4e4;
+}
+
+.payloadname {
+    width: 300px !important;
+}
+
+#editStarred, #editLinux, #editWindows, #editMac {
+    margin-top: 2em;
+}

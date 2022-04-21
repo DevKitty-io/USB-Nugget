@@ -12,14 +12,15 @@
 #include "SH1106Wire.h"
 #include "graphics.h"
 #include "keyboardlayout.h"
-#include <Adafruit_NeoPixel.h>
 
 
-extern Adafruit_NeoPixel pixels;
+
 
 SH1106Wire display(0x3C, 33, 35);
 
 Nugget_Buttons nuggButtons(up,dn,lt,rt);
+
+extern bool webstuffhappening;
 
 // ESPTinyUSB libraries
 #include "cdcusb.h"
@@ -97,15 +98,10 @@ Nugget_Interface payloadRun;
 RubberNugget::RubberNugget() {
   
 }
+const char* osList[] = {"Linux", "Mac", "Windows", "Starred"};
 
-// set up defaults
 void RubberNugget::init() {
-    pixels.begin(); delay(200);
-    pixels.clear();     
     
-    pixels.setPixelColor(0, pixels.Color(0,0, 0)); pixels.show();
-    pixels.setBrightness(50);
-    pixels.show();
     
     
     display.init();
@@ -137,7 +133,7 @@ void RubberNugget::init() {
 
     // create default folders if they don't exist
     
-    const char* osList[] = {"Linux", "Mac", "Windows", "Starred"};
+    
     for (int i=0; i<4; i++) {
       res = f_stat(osList[i], &fno);
       if (res!= FR_OK) {
@@ -252,19 +248,53 @@ void processDuckyScript(String ducky) {
   payloadRun.updateDisplay();
 }
 
+void rPayload (String payloadRaw) {
+    String command;
+    
+    for (int i=0; i < payloadRaw.length(); i++) {
+        if (payloadRaw.charAt(i) == '\n') {
+          Serial.println(command);
+          processDuckyScript(command);
+          command = "";
+        }
+        command+=payloadRaw[i];
+    }
+    processDuckyScript(command);
+//    Serial.println(command);
+    ::display.clear();
+    ::display.display();
+    delay(500);
+    ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
+    ::display.drawString(3,12,"Press any key");
+    ::display.drawString(3,22,"to go back");
+    ::display.drawLine(0, 54, 127, 54);
+    ::display.drawLine(0, 53, 127, 53);
+    
+    ::display.drawString(0, 54, "FINISHED payload");
+    ::display.display();
+
+//    strip.clear();
+//    strip.setPixelColor(0, strip.Color(0,0,0)); 
+//    strip.show();
+
+    
+    while (!(nuggButtons.dnPressed())) {
+      nuggButtons.getPress();
+      vTaskDelay(2);
+    }
+    ::display.clear();
+//    strip.setPixelColor(0, strip.Color(0,0, 0)); strip.show();
+}
+
 void rPayload (char* path) {
+    
     FRESULT fr;            
     FIL file; 
     uint16_t size;
     UINT bytesRead;
-
-      
-      payloadRun.addFooter(path);
-//      payloadRun.addDashboard();
-      payloadRun.updateDisplay();
-      
+    
     fr = f_open(&file, path, FA_READ);
-
+     
     if (fr == FR_OK){
         size = f_size(&file);
         char * data = NULL;
@@ -285,30 +315,62 @@ void rPayload (char* path) {
                 }
                 command+=data[i];
             }
-            Serial.println(command);
+            processDuckyScript(command);
         }
         free(data); // free allocated memory when you don't need it
 
         f_close(&file);
     }
+    
     ::display.clear();
+    ::display.display();
+    delay(500);
     ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
-    ::display.drawString(3,12,"Press any key");
-    ::display.drawString(3,22,"to go back");
+    ::display.drawString(3,9,"Press DOWN");
+    ::display.drawString(3,19,"to go back");
     ::display.drawLine(0, 54, 127, 54);
     ::display.drawLine(0, 53, 127, 53);
     
     ::display.drawString(0, 54, "FINISHED payload");
     ::display.display();
-//    ::pixels.setPixelColor(0, ::pixels.Color(0,150, 0)); ::pixels.show();
-//    pixels.clear();
-    pixels.setPixelColor(0, pixels.Color(255,0, 0)); pixels.show();
+
+    for (int i=253; i<255; i++) {
+      strip.setPixelColor(0, strip.Color(0,i, 0)); 
+      strip.show();
+    }
+
     
     while (!(nuggButtons.dnPressed())) {
       nuggButtons.getPress();
+      vTaskDelay(2);
     }
     ::display.clear();
-    pixels.setPixelColor(0, pixels.Color(0,0, 0)); pixels.show();
+}
+// 0=files 1=folders
+String* getFileList(char* path, uint8_t filetype) {
+
+    uint8_t filecount = 0;
+    String* contents = new String[30]; // up to 30 files / folders i guess
+
+    res = f_opendir(&dir, path);                       /* Open the directory */
+    
+    if (res == FR_OK) {
+        for (;;) {
+            res = f_readdir(&dir, &fno);                   /* Read a directory item */
+            if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
+            
+            if (fno.fattrib & AM_DIR and filetype==0) {                    /* It is a directory */
+                if (res != FR_OK) break;
+                contents[filecount] = fno.fname;
+                filecount++;
+            } else if (filetype==1) {
+                contents[filecount] = fno.fname;
+                filecount++;
+            }
+        }
+        f_closedir(&dir);
+    }
+    return contents;
 }
 
 String* listDirs(char* path) {
@@ -353,9 +415,7 @@ String* listDirs(char* path) {
 
 // continue looping until user selects payloads
 void RubberNugget::selectPayload(char* cpath) {
-
-
-    // forwards navigation    
+    // forwards navigation   
     if (strcmp(cpath,"BACK") != 0) {
       payloadPath+= cpath;
 
@@ -379,31 +439,79 @@ void RubberNugget::selectPayload(char* cpath) {
       payloadPath = payloadPath.substring(0,payloadPath.length()-1); // drop last character
       payloadPath = payloadPath.substring(0,payloadPath.lastIndexOf("/")+1); // drop last path
     }
-   
+    
     char char_array[payloadPath.length()];
     payloadPath.toCharArray(char_array, payloadPath.length());
     
     String* dirlisting = listDirs(char_array);
-    payloadSelector.addKeyMap(dirlisting);
-    payloadSelector.addNav(selectPayload); // pass path 
-    payloadSelector.addFooter(payloadPath );
-    payloadSelector.autoUpdateDisplay();
-    
-    
-      while (CDCUSBSerial.available()) {
-        echo_all(CDCUSBSerial.read());
-      }
-      
-      while (Serial.available()) {
-        echo_all(Serial.read());
-      }
 
-      delay(0);
+    
+    payloadSelector.addKeyMap(dirlisting);
+    payloadSelector.addNav(selectPayload); // pass path
+    
+    if (payloadPath.length() > 17) {
+      payloadSelector.addFooter(payloadPath.substring(0,14)+"...");
+    }
+    else {
+      payloadSelector.addFooter(payloadPath);
+    }    
+    ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
+    ::display.display();
+    payloadSelector.autoUpdateDisplay();
+  
+  
+    while (CDCUSBSerial.available()) {
+      echo_all(CDCUSBSerial.read());
+    }
+    
+    while (Serial.available()) {
+      echo_all(Serial.read());
+    }
+
+    delay(0);
 }
 
 void RubberNugget::runPayload(char* path) {  
-  pixels.setPixelColor(0, pixels.Color(0,0, 255)); pixels.show();
-  delay(100);
-  ::rPayload(path);
+  // i have no clue why this works
+  for (int i=253; i<255; i++) {
+    strip.setPixelColor(0, strip.Color(i,0, 0)); 
+    strip.show();
+  }
   
+  ::rPayload(path);  
+  
+  for (int i=253; i<255; i++) {
+    strip.setPixelColor(0, strip.Color(0,0, 0)); 
+    strip.show();
+  }
+}
+
+void RubberNugget::runLivePayload(String payloadRaw) {
+//  strip.setPixelColor(0, strip.Color(0,0, 255)); strip.show();
+  delay(100);
+  ::rPayload(payloadRaw); 
+}
+
+String RubberNugget::getPayloads() {
+  char * payloadOsTypes[] = {"/Linux","/Mac","/Starred","/Windows"};
+  String pathJson = "[";
+  bool firstPass;
+
+  for (int i =0; i<4; i++) {
+     for (int j=0; j<30; j++){
+        if (getFileList(payloadOsTypes[i], 0)[j] == "") break;
+        char tab2[100];
+        String meow = (String) payloadOsTypes[i] + "/" + getFileList(payloadOsTypes[i], 0)[j]; // path
+        strcpy(tab2, meow.c_str());
+         
+        for (int k=0; k<30; k++) {          
+          if (getFileList(tab2, 1)[k] == "") {break;}
+                   
+          pathJson+="{\"pName\":\""+getFileList(tab2, 1)[k]+"\",\"pCategory\":\""+(String) getFileList(payloadOsTypes[i], 0)[j]+"\",\"pOS\":\""+(String) osList[i]+"\"},";
+        }
+    }
+  }
+  pathJson = pathJson.substring(0,pathJson.length()-1);
+  pathJson+="]";  
+  return pathJson; 
 }

@@ -1,21 +1,208 @@
+#include <Adafruit_NeoPixel.h>
 #include "RubberNugget.h"
 #include "Arduino.h"
-#include <Adafruit_NeoPixel.h>
+#include <base64.h>
+#include "base64.hpp"
 
-Adafruit_NeoPixel pixels {1, 12, NEO_GRB + NEO_KHZ800 };
+
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <WebServer.h>
+
+#include "Webserver.h"
+#include "SH1106Wire.h"
+
+// for file streaming
+#include "cdcusb.h"
+#include "mscusb.h"
+#include "flashdisk.h"
+
+extern SH1106Wire display;
+extern String rubberCss;
+extern String rubberHtml;
+extern String rubberJs;
+
+extern String payloadPath;
+bool webstuffhappening = false;
+
+Adafruit_NeoPixel strip {1, 12, NEO_GRB + NEO_KHZ400 };
+
+const char *ssid = "RubberNugget";
+const char *password = "password";
+WebServer server(80);
+
+TaskHandle_t webapp;
+TaskHandle_t nuggweb;
+
+void getPayloads() {
+  Serial.println(RubberNugget::getPayloads());
+  server.send(200, "application/json", RubberNugget::getPayloads());
+}
+
+void handleRoot() {
+  server.send(200, "text/html", runHtml);
+}
+
+void stylesheet() {
+  server.send(200, "text/css", runCss);
+}
+
+void javascript() {
+  server.send(200, "text/javascript", runJs);
+}
+
+void websave() {
+  String path = (server.arg("path"));
+  String content = (server.arg("content"));
+  content.replace(" ","/");
+
+  char tab2[100];
+  strcpy(tab2, path.c_str());
+
+  char tab3[content.length()+1];
+  strcpy(tab3, content.c_str());
+
+  uint8_t raw[BASE64::decodeLength(tab3)];
+  BASE64::decode(tab3, raw);
+
+  FRESULT fr;            
+  FIL file; 
+  uint16_t size;
+  UINT bytesRead;
+  
+  fr = f_open(&file, tab2, FA_WRITE | FA_CREATE_ALWAYS);
+  if (fr == FR_OK) {
+    Serial.println("opened: "+path);
+    UINT written = 0;
+    fr = f_write(&file, (char*) raw, BASE64::decodeLength(tab3), &written);
+    Serial.println(fr);
+    f_close(&file);
+  }
+
+}
+
+// decode base 64 and run
+
+void webrunlive() {
+  if (server.hasArg("plain")) {
+    Serial.print("Decoding: ");
+    String decoded = (server.arg("plain"));
+    char tab2[decoded.length() + 1];
+    strcpy(tab2, decoded.c_str());
+
+    for (int i = 0; i < decoded.length(); i++) {
+      Serial.print(tab2[i]);
+    }
+
+    Serial.println();
+    Serial.println(decoded.length());
+    Serial.println("-------");
+
+    uint8_t raw[BASE64::decodeLength(tab2)];
+    Serial.println(BASE64::decodeLength(tab2));
+    BASE64::decode(tab2, raw);
+
+    String meow = (char*) raw;
+    meow = meow.substring(0, (int) BASE64::decodeLength(tab2));
+    RubberNugget::runLivePayload(meow);
+    Serial.println();
+    Serial.println("-------");
 
 
+  }
+
+}
+
+void webget() {
+  FRESULT fr;
+  FIL file;
+  uint16_t size;
+  UINT bytesRead;
+
+  String path = server.arg("path");
+  char tab2[100];
+  strcpy(tab2, path.c_str());
+
+  fr = f_open(&file, tab2, FA_READ);
+
+  if (fr == FR_OK) {
+    size = f_size(&file);
+    char * data = NULL;
+
+    data = (char*) malloc(size);
+
+    fr = f_read(&file, data, (UINT) size, &bytesRead);
+    if (fr == FR_OK) {
+
+      String test = (String) data;
+      test = test.substring(0, bytesRead);
+      Serial.println(test);
+
+      String encoded = base64::encode(test);
+      server.send(200, "plain/text", encoded);
+      Serial.println(encoded);
+    }
+    f_close(&file);
+  }
+
+}
+
+// run payload with get request path
+void webrun() {
+  server.send(200, "text/html", "");
+  String path = server.arg("path");
+  char tab2[100];
+  strcpy(tab2, path.c_str());
+
+  RubberNugget::runPayload(tab2);
+}
 
 void setup() {
-    Serial.println(115200);
+  pinMode(12, OUTPUT); delay(500);
 
-    // initialize & launch payload selector
-    
-    RubberNugget::init();
-    RubberNugget::selectPayload("/");  
-    
+  
+  Serial.println(115200);
+
+  WiFi.softAP(ssid, password);
+  IPAddress myIP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(myIP);
+
+  server.on("/", handleRoot);
+  server.on("/data.json", getPayloads);
+
+  server.on("/run.html", handleRoot);
+  server.on("/run", handleRoot);
+  server.on("/run.js", javascript);
+  server.on("/style.css", stylesheet);
+
+  server.on("/savepayload.php", HTTP_POST, websave);
+  server.on("/runlive.php", HTTP_POST, webrunlive);
+  server.on("/getpayload.php", HTTP_GET, webget);
+  server.on("/runpayload.php", HTTP_GET, webrun);
+
+  server.begin();
+  
+  strip.begin(); strip.clear(); strip.show();
+  strip.setPixelColor(0, strip.Color(0,0, 0)); strip.show();
+  
+  strip.setBrightness(100);
+
+
+  // initialize & launch payload selector
+  RubberNugget::init();
+  xTaskCreate(webserverInit, "webapptask", 9 * 1024, NULL, 5, &webapp); // create task priority 1
+  RubberNugget::selectPayload("/");
+
 }
 
 void loop() {
   return;
+}
+
+void webserverInit(void *p) {
+  while (1) {
+    server.handleClient();
+    vTaskDelay(2);
+  }
 }
