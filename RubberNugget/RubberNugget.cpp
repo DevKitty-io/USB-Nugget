@@ -14,8 +14,6 @@
 #include "keyboardlayout.h"
 
 
-
-
 SH1106Wire display(0x3C, 33, 35);
 
 Nugget_Buttons nuggButtons(up,dn,lt,rt);
@@ -433,19 +431,12 @@ void RubberNugget::selectPayload(char* cpath) {
       if (payloadPath!="/") {
         payloadPath+= "/";
       }
-      Serial.print("Cpath: ");
-      Serial.println((char*) cpath);
-      Serial.print("Payload path: ");
-      Serial.println(payloadPath);
     }
 
     // backwards navigation
     else if (strcmp(cpath,"BACK") == 0) {
       payloadPath = payloadPath.substring(0,payloadPath.length()-1); // drop last character
-      payloadPath = payloadPath.substring(0,payloadPath.lastIndexOf("/")+1); // drop last path
-      
-      Serial.print("Payload path: ");
-      Serial.println(payload Path);  
+      payloadPath = payloadPath.substring(0,payloadPath.lastIndexOf("/")+1); // drop last path  
     }
 
     // create array length of payload string
@@ -462,7 +453,7 @@ void RubberNugget::selectPayload(char* cpath) {
     // pass key map to library 
 
     payloadSelector.addKeyMap(listDirs(char_array));
-    payloadSelector.addNav(selectPayload); // pass path
+//    payloadSelector.addNav(selectPayload); // pass path
     
     if (payloadPath.length() > 17) {
       payloadSelector.addFooter(payloadPath.substring(0,14)+"...");
@@ -472,7 +463,7 @@ void RubberNugget::selectPayload(char* cpath) {
     }    
     ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
     ::display.display();
-    payloadSelector.autoUpdateDisplay();
+//    payloadSelector.autoUpdateDisplay();
   
   
 //    while (CDCUSBSerial.available()) {

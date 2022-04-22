@@ -15,8 +15,8 @@
 
 ### Bugs
 ### Critical
-- [ ] Nugget Crashes after multiple navigations (recursive issue)
 - [ ] File names collide w/ Nugget graphic
+- [x] Recursive payload selection w/ no exit clause
 - [ ] Responsive web interface
 - [ ] Can't access web UI after running payload
 - [ ] web UI shows doesn't subfolder files - follows OS/Type paradigm

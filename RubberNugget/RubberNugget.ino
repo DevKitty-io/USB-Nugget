@@ -4,13 +4,13 @@
 #include <base64.h>
 #include "base64.hpp"
 
-
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WebServer.h>
 
 #include "Webserver.h"
 #include "SH1106Wire.h"
+#include "Nugget_Interface.h"
 
 // for file streaming
 #include "cdcusb.h"
@@ -24,6 +24,8 @@ extern String rubberJs;
 
 extern String payloadPath;
 bool webstuffhappening = false;
+
+extern Nugget_Interface payloadSelector;
 
 Adafruit_NeoPixel strip {1, 12, NEO_GRB + NEO_KHZ400 };
 
@@ -187,12 +189,13 @@ void setup() {
   strip.setPixelColor(0, strip.Color(0,0, 0)); strip.show();
   
   strip.setBrightness(100);
-
+  payloadSelector.addNav(RubberNugget::selectPayload);
 
   // initialize & launch payload selector
   RubberNugget::init();
   xTaskCreate(webserverInit, "webapptask", 9 * 1024, NULL, 5, &webapp); // create task priority 1
   RubberNugget::selectPayload("/");
+  payloadSelector.autoUpdateDisplay();
 
 }
 
