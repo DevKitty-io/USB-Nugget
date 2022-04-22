@@ -373,10 +373,12 @@ String* getFileList(char* path, uint8_t filetype) {
     return contents;
 }
 
-String* listDirs(char* path) {
+String* contents = new String[4];
 
+String* listDirs(char* path) {
+  
+  Serial.println(ESP.getFreeHeap());
   uint8_t count = 0;
-  String* contents = new String[4];
 
   res = f_opendir(&dir, path);
   if (res == FR_OK) {
@@ -419,34 +421,47 @@ void RubberNugget::selectPayload(char* cpath) {
     if (strcmp(cpath,"BACK") != 0) {
       payloadPath+= cpath;
 
-      if (payloadPath.indexOf(".txt") !=-1 ) {
-        
-        char char_array[payloadPath.length()+1];
-        payloadPath.toCharArray(char_array, payloadPath.length()+1);
-
-        runPayload(char_array); // calls runPayload with name of path
-        payloadPath="";
-//        return;
-      }
+//      if (payloadPath.indexOf(".txt") !=-1 ) {
+//        
+//        char char_array[payloadPath.length()+1];
+//        payloadPath.toCharArray(char_array, payloadPath.length()+1);
+//
+//        runPayload(char_array); // calls runPayload with name of path
+//        payloadPath="";
+//      }
       
       if (payloadPath!="/") {
         payloadPath+= "/";
       }
+      Serial.print("Cpath: ");
+      Serial.println((char*) cpath);
+      Serial.print("Payload path: ");
+      Serial.println(payloadPath);
     }
 
     // backwards navigation
     else if (strcmp(cpath,"BACK") == 0) {
       payloadPath = payloadPath.substring(0,payloadPath.length()-1); // drop last character
       payloadPath = payloadPath.substring(0,payloadPath.lastIndexOf("/")+1); // drop last path
+      
+      Serial.print("Payload path: ");
+      Serial.println(payload Path);  
     }
-    
-    char char_array[payloadPath.length()];
-    payloadPath.toCharArray(char_array, payloadPath.length());
-    
-    String* dirlisting = listDirs(char_array);
 
+    // create array length of payload string
+    Serial.println("***************");
+    Serial.print("Heap payload path array");
     
-    payloadSelector.addKeyMap(dirlisting);
+//    Serial.println(ESP.getFreeHeap()); 
+    char char_array[100];
+    payloadPath.toCharArray(char_array, payloadPath.length());    
+//    Serial.println(ESP.getFreeHeap());
+
+//    String* dirlisting = listDirs(char_array);
+
+    // pass key map to library 
+
+    payloadSelector.addKeyMap(listDirs(char_array));
     payloadSelector.addNav(selectPayload); // pass path
     
     if (payloadPath.length() > 17) {
@@ -460,14 +475,14 @@ void RubberNugget::selectPayload(char* cpath) {
     payloadSelector.autoUpdateDisplay();
   
   
-    while (CDCUSBSerial.available()) {
-      echo_all(CDCUSBSerial.read());
-    }
-    
-    while (Serial.available()) {
-      echo_all(Serial.read());
-    }
-
+//    while (CDCUSBSerial.available()) {
+//      echo_all(CDCUSBSerial.read());
+//    }
+//    
+//    while (Serial.available()) {
+//      echo_all(Serial.read());
+//    }
+    Serial.println("reached end of selector");
     delay(0);
 }
 
