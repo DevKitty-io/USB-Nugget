@@ -156,7 +156,7 @@ void webrun() {
   char tab2[100];
   strcpy(tab2, path.c_str());
 
-  RubberNugget::runPayload(tab2);
+  RubberNugget::runPayload(tab2,1); // provide parameter triggered from webpage
 }
 
 void setup() {

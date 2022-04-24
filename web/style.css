@@ -5,6 +5,7 @@
 .container {
     width: 70%;
     margin: auto;
+    /* margin-top: 5em; */
 }
 
 table {
@@ -48,6 +49,16 @@ button {
     background-color: #8abe8d91;
 }
 
+
+.close {
+    background-color: #3949ab;
+    color: white;
+}
+
+.close:hover {
+    background-color: #4d5aaf;
+}
+
 textarea {
     display: block;
     width: 100%;
@@ -63,7 +74,6 @@ textarea {
 
 nav {
     max-width: 100%;
-    padding: 0 2em;
     background-color: #263238;
 }
 
@@ -101,4 +111,10 @@ body {
 
 #editStarred, #editLinux, #editWindows, #editMac {
     margin-top: 2em;
+}
+
+@media only screen and (max-width: 700px) {
+    .container { 
+        width: 90% !important;
+    }
 }

@@ -63,6 +63,7 @@ function editPayload(payloadPath, payloadEdit) {
 </div> \
 <button class=\"run\" onclick=\"runLive(\'"+payloadEdit+"\')\">Run Live</button> \
 <button class=\"edit\" onclick=\"savePayload('"+payloadEdit+"','"+payloadPath+"')\">Save</button> \
+<button class=\"close\" onclick=\"closeEdit()\">Close</button> \
 </div> \
 ";
 }

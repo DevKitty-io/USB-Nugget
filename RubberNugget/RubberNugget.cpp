@@ -13,7 +13,6 @@
 #include "graphics.h"
 #include "keyboardlayout.h"
 
-
 SH1106Wire display(0x3C, 33, 35);
 
 Nugget_Buttons nuggButtons(up,dn,lt,rt);
@@ -247,6 +246,9 @@ void processDuckyScript(String ducky) {
 }
 
 void rPayload (String payloadRaw) {
+    strip.setPixelColor(0, strip.Color(255,0, 0)); 
+    strip.show(); strip.show();
+    
     String command;
     
     for (int i=0; i < payloadRaw.length(); i++) {
@@ -258,33 +260,17 @@ void rPayload (String payloadRaw) {
         command+=payloadRaw[i];
     }
     processDuckyScript(command);
-//    Serial.println(command);
     ::display.clear();
-    ::display.display();
-    delay(500);
+
+    //manual update display
+    payloadSelector.updateDisplay();
     ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
-    ::display.drawString(3,12,"Press any key");
-    ::display.drawString(3,22,"to go back");
-    ::display.drawLine(0, 54, 127, 54);
-    ::display.drawLine(0, 53, 127, 53);
-    
-    ::display.drawString(0, 54, "FINISHED payload");
     ::display.display();
-
-//    strip.clear();
-//    strip.setPixelColor(0, strip.Color(0,0,0)); 
-//    strip.show();
-
-    
-    while (!(nuggButtons.dnPressed())) {
-      nuggButtons.getPress();
-      vTaskDelay(2);
-    }
-    ::display.clear();
-//    strip.setPixelColor(0, strip.Color(0,0, 0)); strip.show();
+    strip.setPixelColor(0, strip.Color(0,0, 0)); 
+    strip.show(); strip.show();
 }
 
-void rPayload (char* path) {
+void rPayload (char* path, uint8_t from) {
     
     FRESULT fr;            
     FIL file; 
@@ -319,30 +305,37 @@ void rPayload (char* path) {
 
         f_close(&file);
     }
+
+    // web vs local
+    if (from==0) {
+      ::display.clear();
+      ::display.display();
+      delay(500);
+      ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
+      ::display.drawString(3,9,"Press DOWN");
+      ::display.drawString(3,19,"to go back");
+      ::display.drawLine(0, 54, 127, 54);
+      ::display.drawLine(0, 53, 127, 53);
+      
+      ::display.drawString(0, 54, "FINISHED payload");
+      ::display.display();
+  
+      for (int i=253; i<255; i++) {
+        strip.setPixelColor(0, strip.Color(0,i, 0)); 
+        strip.show();
+      }
+  
+      
+      while (!(nuggButtons.dnPressed())) {
+        nuggButtons.getPress();
+        vTaskDelay(2);
+      }
+    }
     
     ::display.clear();
-    ::display.display();
-    delay(500);
+    payloadSelector.updateDisplay();
     ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
-    ::display.drawString(3,9,"Press DOWN");
-    ::display.drawString(3,19,"to go back");
-    ::display.drawLine(0, 54, 127, 54);
-    ::display.drawLine(0, 53, 127, 53);
-    
-    ::display.drawString(0, 54, "FINISHED payload");
     ::display.display();
-
-    for (int i=253; i<255; i++) {
-      strip.setPixelColor(0, strip.Color(0,i, 0)); 
-      strip.show();
-    }
-
-    
-    while (!(nuggButtons.dnPressed())) {
-      nuggButtons.getPress();
-      vTaskDelay(2);
-    }
-    ::display.clear();
 }
 // 0=files 1=folders
 String* getFileList(char* path, uint8_t filetype) {
@@ -361,7 +354,7 @@ String* getFileList(char* path, uint8_t filetype) {
                 if (res != FR_OK) break;
                 contents[filecount] = fno.fname;
                 filecount++;
-            } else if (filetype==1) {
+            } else if (!(fno.fattrib & AM_DIR) and filetype==1) {
                 contents[filecount] = fno.fname;
                 filecount++;
             }
@@ -371,11 +364,18 @@ String* getFileList(char* path, uint8_t filetype) {
     return contents;
 }
 
-String* contents = new String[4];
 
+
+String* contents = new String[4];
+uint8_t depth = 0;
+
+// returns list of directories or files
 String* listDirs(char* path) {
+  contents[0] = "";
+  contents[1] = "";
+  contents[2] = "";
+  contents[3] = "";
   
-  Serial.println(ESP.getFreeHeap());
   uint8_t count = 0;
 
   res = f_opendir(&dir, path);
@@ -383,14 +383,14 @@ String* listDirs(char* path) {
         for (;;) {
             res = f_readdir(&dir, &fno);                   /* Read a directory item */
             if (res != FR_OK || fno.fname[0] == 0 || count>3) break;  /* Break on error or end of dir */
-            if (fno.fattrib & AM_DIR) {
+            if (fno.fattrib & AM_DIR and depth<=2) {
                 if (res != FR_OK) break;
                 contents[count] = (String) fno.fname;
                 count++;
                 Serial.println(fno.fname);
                 Serial.println(count);
             } 
-            else {                                       /* It is a file. */
+            else if (!(fno.fattrib & AM_DIR) and depth==3) {                                       /* It is a file. */
                 contents[count] = (String) fno.fname;
                 count++;
             }
@@ -417,24 +417,29 @@ String* listDirs(char* path) {
 void RubberNugget::selectPayload(char* cpath) {
     // forwards navigation   
     if (strcmp(cpath,"BACK") != 0) {
+      
       payloadPath+= cpath;
+      
+      depth++;
+      if (payloadPath.indexOf(".txt") !=-1 ) {
+        
+        char char_array[payloadPath.length()+1];
+        payloadPath.toCharArray(char_array, payloadPath.length()+1);
 
-//      if (payloadPath.indexOf(".txt") !=-1 ) {
-//        
-//        char char_array[payloadPath.length()+1];
-//        payloadPath.toCharArray(char_array, payloadPath.length()+1);
-//
-//        runPayload(char_array); // calls runPayload with name of path
-//        payloadPath="";
-//      }
+        runPayload(char_array,0); // calls runPayload with name of path
+        payloadPath="";
+        depth=1;
+      }
       
       if (payloadPath!="/") {
         payloadPath+= "/";
       }
+      
     }
 
     // backwards navigation
     else if (strcmp(cpath,"BACK") == 0) {
+      depth--;
       payloadPath = payloadPath.substring(0,payloadPath.length()-1); // drop last character
       payloadPath = payloadPath.substring(0,payloadPath.lastIndexOf("/")+1); // drop last path  
     }
@@ -475,16 +480,17 @@ void RubberNugget::selectPayload(char* cpath) {
 //    }
     Serial.println("reached end of selector");
     delay(0);
+    Serial.println(depth);
 }
 
-void RubberNugget::runPayload(char* path) {  
+void RubberNugget::runPayload(char* path, uint8_t from) {  
   // i have no clue why this works
   for (int i=253; i<255; i++) {
     strip.setPixelColor(0, strip.Color(i,0, 0)); 
     strip.show();
   }
   
-  ::rPayload(path);  
+  ::rPayload(path, from);  
   
   for (int i=253; i<255; i++) {
     strip.setPixelColor(0, strip.Color(0,0, 0)); 
@@ -499,12 +505,14 @@ void RubberNugget::runLivePayload(String payloadRaw) {
 }
 
 String RubberNugget::getPayloads() {
-  char * payloadOsTypes[] = {"/Linux","/Mac","/Starred","/Windows"};
+  char * payloadOsTypes[] = {"/Linux","/Mac","/Windows","/Starred"};
   String pathJson = "[";
   bool firstPass;
 
   for (int i =0; i<4; i++) {
      for (int j=0; j<30; j++){
+
+        // list subdirs in OS
         if (getFileList(payloadOsTypes[i], 0)[j] == "") break;
         char tab2[100];
         String meow = (String) payloadOsTypes[i] + "/" + getFileList(payloadOsTypes[i], 0)[j]; // path

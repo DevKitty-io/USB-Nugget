@@ -13,7 +13,7 @@ class RubberNugget {
     RubberNugget();
     static void init();
     static void selectPayload(char* path);
-    static void runPayload(char* path);
+    static void runPayload(char* path, uint8_t from);
     static void runLivePayload(String payloadRaw);
     static String getPayloads();
   
