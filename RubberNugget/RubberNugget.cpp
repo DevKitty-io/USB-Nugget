@@ -161,12 +161,14 @@ void pressKey(String keyPress) {
   }
 }
 
+uint16_t defaultDelay = 10;
+
 void processDuckyScript(String ducky) {
   String tCommand = ducky.substring(0, ducky.indexOf(' ')); // get command
   tCommand.toUpperCase(); tCommand.trim();
 
   ::display.clear();
-  payloadRun.addFooter("RUNNING payload");
+  payloadRun.addFooter("RUNNING PAYLOAD");
   payloadRun.updateDisplay();
   
   if (tCommand.equals("REM")) {
@@ -178,8 +180,44 @@ void processDuckyScript(String ducky) {
     ::display.drawXbm(0, 0, 128, 64, reload_bits);
     payloadRun.updateDisplay();
     delay(ducky.substring(ducky.indexOf(' ')+1, ducky.length()).toInt()); // delay in MS
-    Serial.println("Delayed!");
-       
+    Serial.println("Delayed!");       
+  }
+  else if (tCommand.equals("DEFAULT_DELAY") or tCommand.equals("DEFAULTDELAY")) {
+    ::display.drawString(3,12,"DEFAULT");
+    ::display.drawString(3,22,"DELAY:");
+    ::display.drawString(3,32,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
+    ::display.drawXbm(0, 0, 128, 64, reload_bits);
+    payloadRun.updateDisplay();
+    defaultDelay = ducky.substring(ducky.indexOf(' ')+1, ducky.length()).toInt();
+  }
+  else if (tCommand.equals("LED")) {
+    ::display.drawString(3,12,"COLOR:");
+    ::display.drawString(3,22,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length())); // accept single color parameter
+    ::display.drawXbm(0, 0, 128, 64, reload_bits);
+    payloadRun.updateDisplay();
+    String color = (String) ducky.substring(ducky.indexOf(' ')+1, ducky.length());
+    color.toUpperCase();
+    
+    if (color.equals("R")) { strip.setPixelColor(0, strip.Color(255,0, 0)); }
+    else if (color.equals("G")) {
+      strip.setPixelColor(0, strip.Color(0,255, 0));
+    }
+     else if (color.equals("B")) {
+      strip.setPixelColor(0, strip.Color(0,0, 255));
+    }
+     else if (color.equals("Y")) {
+      strip.setPixelColor(0, strip.Color(255,255, 0));
+    }
+     else if (color.equals("C")) {
+      strip.setPixelColor(0, strip.Color(0,255, 255));
+    }
+     else if (color.equals("M")) {
+      strip.setPixelColor(0, strip.Color(255,0, 255));
+    }
+     else if (color.equals("W")) {
+      strip.setPixelColor(0, strip.Color(120,120, 120));
+    }
+    strip.show(); strip.show();
   }
   else if (tCommand.equals("STRING")) {
     ::display.drawString(3,12,"STRING: ");
@@ -206,6 +244,8 @@ void processDuckyScript(String ducky) {
     }
     display.drawXbm(0, 0, 128, 64, high_signal_bits);
     payloadRun.updateDisplay();
+    delay(defaultDelay*10);
+    
     pressKey(tCommand); // press first
     
     String duckyCurrent;
@@ -247,7 +287,7 @@ void processDuckyScript(String ducky) {
 
 void rPayload (String payloadRaw) {
     strip.setPixelColor(0, strip.Color(255,0, 0)); 
-    strip.show(); strip.show();
+    strip.show(); strip.show(); strip.show();
     
     String command;
     
@@ -309,21 +349,17 @@ void rPayload (char* path, uint8_t from) {
     // web vs local
     if (from==0) {
       ::display.clear();
-      ::display.display();
-      delay(500);
       ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
       ::display.drawString(3,9,"Press DOWN");
       ::display.drawString(3,19,"to go back");
       ::display.drawLine(0, 54, 127, 54);
       ::display.drawLine(0, 53, 127, 53);
       
-      ::display.drawString(0, 54, "FINISHED payload");
+      ::display.drawString(0, 54, "FINISHED PAYLOAD");
       ::display.display();
   
-      for (int i=253; i<255; i++) {
-        strip.setPixelColor(0, strip.Color(0,i, 0)); 
-        strip.show();
-      }
+      strip.setPixelColor(0, strip.Color(0,255, 0)); 
+      strip.show(); strip.show();
   
       
       while (!(nuggButtons.dnPressed())) {
@@ -332,10 +368,7 @@ void rPayload (char* path, uint8_t from) {
       }
     }
     
-    ::display.clear();
-    payloadSelector.updateDisplay();
-    ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
-    ::display.display();
+
 }
 // 0=files 1=folders
 String* getFileList(char* path, uint8_t filetype) {
@@ -428,6 +461,8 @@ void RubberNugget::selectPayload(char* cpath) {
 
         runPayload(char_array,0); // calls runPayload with name of path
         payloadPath="";
+        ::display.clear();
+        Serial.println("finished running payload");
         depth=1;
       }
       
@@ -444,21 +479,13 @@ void RubberNugget::selectPayload(char* cpath) {
       payloadPath = payloadPath.substring(0,payloadPath.lastIndexOf("/")+1); // drop last path  
     }
 
-    // create array length of payload string
-    Serial.println("***************");
-    Serial.print("Heap payload path array");
-    
-//    Serial.println(ESP.getFreeHeap()); 
+
     char char_array[100];
     payloadPath.toCharArray(char_array, payloadPath.length());    
-//    Serial.println(ESP.getFreeHeap());
-
-//    String* dirlisting = listDirs(char_array);
 
     // pass key map to library 
 
     payloadSelector.addKeyMap(listDirs(char_array));
-//    payloadSelector.addNav(selectPayload); // pass path
     
     if (payloadPath.length() > 17) {
       payloadSelector.addFooter(payloadPath.substring(0,14)+"...");
@@ -466,11 +493,11 @@ void RubberNugget::selectPayload(char* cpath) {
     else {
       payloadSelector.addFooter(payloadPath);
     }    
-    ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
+    ::display.drawXbm(0, 0, 128, 64, RubberNugget_bits);
     ::display.display();
+  
+  
 //    payloadSelector.autoUpdateDisplay();
-  
-  
 //    while (CDCUSBSerial.available()) {
 //      echo_all(CDCUSBSerial.read());
 //    }

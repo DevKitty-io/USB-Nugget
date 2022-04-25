@@ -1,4 +1,5 @@
-# RubberNugget-Arduino
+# RubberNugget USB Attack Tool
+The RubberNugget is a USB attack tool that lets you hack computers in seconds with keystroke injection!  
 
 ### Beta v1.0 Feature List
 - [x] Directory Traversal
@@ -9,14 +10,14 @@
 
 ### Priority Features v1.0 release
 - [x] Single level navigation
-- [ ] Responsive Web UI 
-- [ ] Web close button
-- [ ] duckyscript alias colors / min delay
-- [ ] file name truncation
-- [ ] update graphics - arrow indicators, nugget
+- [x] Responsive Web UI 
+- [x] Web close button
+- [x] duckyscript min delay
+- [x] file name truncation
+- [x] update graphics - arrow indicators, nugget
 
 ### Future Features
-- [ ] DuckyScript Aliasing / Colors
+- [ ] DuckyScript Aliasing
 - [ ] Proper FS mounting / USB
 - [ ] Overhaul / Implement OOP Graphic Library
 - [ ] Scrolling full file path
@@ -26,15 +27,18 @@
 
 ## Bugs
 ### Critical
-- [ ] File names collide w/ Nugget graphic
+- [x] File names collide w/ Nugget graphic
 - [x] Recursive payload selection w/ no exit clause
-- [ ] Responsive web interface
+- [x] Responsive web interface
 - [x] Can't access web UI after running payload
 - [x] web UI shows doesn't subfolder files - follows OS/Type paradigm
+- [x] crash after exit payload / clear screen delaying
 
-### Meh
+### Meh / Edge Cases
 - [ ] Folders named `*txt` trigger payloadRun
 - [ ] Files named `BACK` trigger backwards navigation
+- [ ] Files parsed as folder for extensions that arent `.txt`
 - [ ] Shouldn't run empty files
 - [ ] Keypress debouncing / key features
 - [ ] Proper input sanitation for filepaths
+- [ ] Can't rename files / folders

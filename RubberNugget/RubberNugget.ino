@@ -195,12 +195,15 @@ void setup() {
   RubberNugget::init();
   xTaskCreate(webserverInit, "webapptask", 9 * 1024, NULL, 5, &webapp); // create task priority 1
   RubberNugget::selectPayload("/");
+
+  // udpates nav map & path infinitely
   payloadSelector.autoUpdateDisplay();
 
 }
 
 void loop() {
-  return;
+//  RubberNugget::selectPayload("/");
+//  payloadSelector.autoUpdateDisplay();
 }
 
 void webserverInit(void *p) {
