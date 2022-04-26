@@ -56,25 +56,25 @@ void javascript() {
 void websave() {
   String path = (server.arg("path"));
   String content = (server.arg("content"));
-  content.replace(" ","/");
+  content.replace(" ", "/");
 
   char tab2[100];
   strcpy(tab2, path.c_str());
 
-  char tab3[content.length()+1];
+  char tab3[content.length() + 1];
   strcpy(tab3, content.c_str());
 
   uint8_t raw[BASE64::decodeLength(tab3)];
   BASE64::decode(tab3, raw);
 
-  FRESULT fr;            
-  FIL file; 
+  FRESULT fr;
+  FIL file;
   uint16_t size;
   UINT bytesRead;
-  
+
   fr = f_open(&file, tab2, FA_WRITE | FA_CREATE_ALWAYS);
   if (fr == FR_OK) {
-    Serial.println("opened: "+path);
+    Serial.println("opened: " + path);
     UINT written = 0;
     fr = f_write(&file, (char*) raw, BASE64::decodeLength(tab3), &written);
     Serial.println(fr);
@@ -156,13 +156,13 @@ void webrun() {
   char tab2[100];
   strcpy(tab2, path.c_str());
 
-  RubberNugget::runPayload(tab2,1); // provide parameter triggered from webpage
+  RubberNugget::runPayload(tab2, 1); // provide parameter triggered from webpage
 }
 
 void setup() {
   pinMode(12, OUTPUT); delay(500);
 
-  
+
   Serial.println(115200);
 
   WiFi.softAP(ssid, password);
@@ -184,10 +184,10 @@ void setup() {
   server.on("/runpayload.php", HTTP_GET, webrun);
 
   server.begin();
-  
+
   strip.begin(); strip.clear(); strip.show();
-  strip.setPixelColor(0, strip.Color(0,0, 0)); strip.show();
-  
+  strip.setPixelColor(0, strip.Color(0, 0, 0)); strip.show();
+
   strip.setBrightness(100);
   payloadSelector.addNav(RubberNugget::selectPayload);
 
@@ -202,8 +202,7 @@ void setup() {
 }
 
 void loop() {
-//  RubberNugget::selectPayload("/");
-//  payloadSelector.autoUpdateDisplay();
+  return;
 }
 
 void webserverInit(void *p) {
