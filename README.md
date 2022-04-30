@@ -11,6 +11,8 @@ More documentation coming soon.
 6.	Once you see "Finished", click "Choose a file" and select the .BIN file you downloaded in step 1. Click "Program" to flash your S2 Nugget!
 7.	When its done, unplug your S2 Nugget and plug it in again to see the new features. 
 
+![FRS6GKgVIAElp74](https://user-images.githubusercontent.com/40251293/166099155-a2f1f265-5920-4442-a0ff-cd09b22147fe.jpg)
+
 
 ## Creating Payloads
 To upload a payload, you can save a `.txt` file to the RubberNugget flash drive.  Payloads must be saved under an operating system, then category type. (OS->Category->Payload.txt)
