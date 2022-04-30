@@ -9,7 +9,7 @@ More documentation coming soon.
 4.	Open the following URL in Google Chrome (other browsers not currently supported: https://nabucasa.github.io/esp-web-flasher/
 5.	Click on "Connect" and then select the "ESP32-S2" board. Click "Erase" and "OK" to continue.
 6.	Once you see "Finished", click "Choose a file" and select the .BIN file you downloaded in step 1. Click "Program" to flash your S2 Nugget!
-7.	Once you see "", you're done! Unplug your S2 Nugget and plug it in again to see the new features. 
+7.	When its done, unplug your S2 Nugget and plug it in again to see the new features. 
 
 
 ## Creating Payloads
