@@ -1,6 +1,8 @@
 # RubberNugget: USB Attack Platform
 A versatile USB attack platform that lets you hack computers in seconds using a [WiFi Nugget](https://wifinugget.com)!  
-More documentation coming soon.
+
+<img src="https://user-images.githubusercontent.com/40251293/166099155-a2f1f265-5920-4442-a0ff-cd09b22147fe.jpg" width="700" />
+
 
 ## To install the new RubberNugget:
 1.	Download the .BIN file here: [(direct link)](https://github.com/HakCat-Tech/RubberNugget/releases/download/v1.0-beta/v1.0-beta-RubberNugget.bin) or from the release page: https://github.com/HakCat-Tech/RubberNugget/releases/tag/v1.0-beta
@@ -10,8 +12,6 @@ More documentation coming soon.
 5.	Click on "Connect" and then select the "ESP32-S2" board. Click "Erase" and "OK" to continue.
 6.	Once you see "Finished", click "Choose a file" and select the .BIN file you downloaded in step 1. Click "Program" to flash your S2 Nugget!
 7.	When its done, unplug your S2 Nugget and plug it in again to see the new features. 
-
-<img src="https://user-images.githubusercontent.com/40251293/166099155-a2f1f265-5920-4442-a0ff-cd09b22147fe.jpg" width="500" />
 
 ## Creating Payloads
 To upload a payload, you can save a `.txt` file to the RubberNugget flash drive.  Payloads must be saved under an operating system, then category type. (OS->Category->Payload.txt)
