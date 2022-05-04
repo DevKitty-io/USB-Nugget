@@ -5,7 +5,7 @@ A versatile USB attack platform that lets you hack computers in seconds using a 
 
 
 ## To install the new RubberNugget:
-1.	Download the .BIN file here: [(direct link)](https://github.com/HakCat-Tech/RubberNugget/releases/download/v1.0-beta/v1.0-beta-RubberNugget.bin) or from the release page: https://github.com/HakCat-Tech/RubberNugget/releases/tag/v1.0-beta
+1.	Download the .BIN file here: [(direct link)](https://github.com/HakCat-Tech/RubberNugget/releases/download/v1.0-beta/v1.0-beta-RubberNugget.bin) or from the release page: https://github.com/HakCat-Tech/RubberNugget/releases/tag/v1.0.1-beta
 2.	Take your S2 Nugget out of its case
 3.	Press and hold the "0" button on the back of your Nugget, plug it in to your computer, then release the "0" button. Your Nugget is now in flashing mode.
 4.	Open the following URL in Google Chrome (other browsers not currently supported: https://nabucasa.github.io/esp-web-flasher/
@@ -17,7 +17,7 @@ A versatile USB attack platform that lets you hack computers in seconds using a 
 To upload a payload, you can save a `.txt` file to the RubberNugget flash drive.  Payloads must be saved under an operating system, then category type. (OS->Category->Payload.txt)
 
 ## Accessing the Web Interface
-To access the web interface, connect to the `RubberNugget` AP with the password `password`.  In a web browser, navigate to `192.168.4.1` to access the payload deployment system.  At the moment, the web interface can only edit / run payloads.
+To access the web interface, connect to the `RubberNugget` AP with the password `nugget123`.  In a web browser, navigate to `192.168.4.1` to access the payload deployment system.  At the moment, the web interface can only edit / run payloads.
 
 ## Current Features - v1.0 (beta)
 
