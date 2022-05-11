@@ -371,10 +371,15 @@ void rPayload (char* path, uint8_t from) {
 
 }
 // 0=files 1=folders
+String* contents2 = new String[30];
+
 String* getFileList(char* path, uint8_t filetype) {
 
+    for (int i=0; i<30; i++) {
+      contents2[i] = "";
+    }
     uint8_t filecount = 0;
-    String* contents = new String[30]; // up to 30 files / folders i guess
+     // up to 30 files / folders i guess
 
     res = f_opendir(&dir, path);                       /* Open the directory */
     
@@ -385,16 +390,16 @@ String* getFileList(char* path, uint8_t filetype) {
             
             if (fno.fattrib & AM_DIR and filetype==0) {                    /* It is a directory */
                 if (res != FR_OK) break;
-                contents[filecount] = fno.fname;
+                contents2[filecount] = fno.fname;
                 filecount++;
             } else if (!(fno.fattrib & AM_DIR) and filetype==1) {
-                contents[filecount] = fno.fname;
+                contents2[filecount] = fno.fname;
                 filecount++;
             }
         }
         f_closedir(&dir);
     }
-    return contents;
+    return contents2;
 }
 
 
@@ -532,17 +537,23 @@ void RubberNugget::runLivePayload(String payloadRaw) {
 }
 
 String RubberNugget::getPayloads() {
+  
+  Serial.println(ESP.getFreeHeap());
   char * payloadOsTypes[] = {"/Linux","/Mac","/Windows","/Starred"};
   String pathJson = "[";
   bool firstPass;
+  char tab2[100];
+  String meow;
+  
+  Serial.println(ESP.getFreeHeap());
 
   for (int i =0; i<4; i++) {
      for (int j=0; j<30; j++){
 
         // list subdirs in OS
         if (getFileList(payloadOsTypes[i], 0)[j] == "") break;
-        char tab2[100];
-        String meow = (String) payloadOsTypes[i] + "/" + getFileList(payloadOsTypes[i], 0)[j]; // path
+//        char tab2[100];
+       meow = (String) payloadOsTypes[i] + "/" + getFileList(payloadOsTypes[i], 0)[j]; // path
         strcpy(tab2, meow.c_str());
          
         for (int k=0; k<30; k++) {          
@@ -552,7 +563,10 @@ String RubberNugget::getPayloads() {
         }
     }
   }
+  
+  Serial.println(ESP.getFreeHeap());
   pathJson = pathJson.substring(0,pathJson.length()-1);
   pathJson+="]";  
+  Serial.println(ESP.getFreeHeap());
   return pathJson; 
 }

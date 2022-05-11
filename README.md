@@ -1,7 +1,7 @@
 # RubberNugget: USB Attack Platform
 A versatile USB attack platform that lets you hack computers in seconds using a [WiFi Nugget](https://wifinugget.com)!  
 
-<img src="https://user-images.githubusercontent.com/40251293/166099155-a2f1f265-5920-4442-a0ff-cd09b22147fe.jpg" width="700" />
+<img src="images/RubberNugget-Features.png" width="700" />
 
 
 ## To install the new RubberNugget:
@@ -19,7 +19,7 @@ To upload a payload, you can save a `.txt` file to the RubberNugget flash drive.
 ## Accessing the Web Interface
 To access the web interface, connect to the `RubberNugget` AP with the password `nugget123`.  In a web browser, navigate to `192.168.4.1` to access the payload deployment system.  At the moment, the web interface can only edit / run payloads.
 
-## Current Features - v1.0 (beta)
+## Current Features - v1.0.x (beta)
 
 - DuckyScript Compatible
     - Basic syntax: `STRING`, `DELAY`, keypress combos

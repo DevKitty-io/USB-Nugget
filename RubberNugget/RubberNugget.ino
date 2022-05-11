@@ -42,6 +42,8 @@ void getPayloads() {
 }
 
 void handleRoot() {
+//  Serial.println(ESP.getFreeHeap());
+  Serial.println("handling root!");
   server.send(200, "text/html", runHtml);
 }
 
@@ -151,7 +153,7 @@ void webget() {
 
 // run payload with get request path
 void webrun() {
-  server.send(200, "text/html", "");
+  server.send(200, "text/hhtml", "");
   String path = server.arg("path");
   char tab2[100];
   strcpy(tab2, path.c_str());
@@ -193,7 +195,7 @@ void setup() {
 
   // initialize & launch payload selector
   RubberNugget::init();
-  xTaskCreate(webserverInit, "webapptask", 9 * 1024, NULL, 5, &webapp); // create task priority 1
+  xTaskCreate(webserverInit, "webapptask", 12 * 1024, NULL, 5, &webapp); // create task priority 1
   RubberNugget::selectPayload("/");
 
   // udpates nav map & path infinitely
