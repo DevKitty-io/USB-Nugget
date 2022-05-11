@@ -1,11 +1,11 @@
 # RubberNugget: USB Attack Platform
 A versatile USB attack platform that lets you hack computers in seconds using a [WiFi Nugget](https://wifinugget.com)!  
 
-<img src="images/RubberNugget-Features.png" width="700" />
+<img src="images/RubberNugget-Features.png"  />
 
 
 ## To install the new RubberNugget:
-1.	Download the .BIN file here: [(direct link)](https://github.com/HakCat-Tech/RubberNugget/releases/download/v1.0-beta/v1.0-beta-RubberNugget.bin) or from the release page: https://github.com/HakCat-Tech/RubberNugget/releases/tag/v1.0.1-beta
+1.	Download the .BIN file here: [(direct link)](https://github.com/HakCat-Tech/RubberNugget/releases/) or from the release page: https://github.com/HakCat-Tech/RubberNugget/releases/
 2.	Take your S2 Nugget out of its case
 3.	Press and hold the "0" button on the back of your Nugget, plug it in to your computer, then release the "0" button. Your Nugget is now in flashing mode.
 4.	Open the following URL in Google Chrome (other browsers not currently supported: https://nabucasa.github.io/esp-web-flasher/
