@@ -24,24 +24,37 @@
         <div class="payloadTable">
             <h2>Create a payload</h2>
             <div>
-                <input type="text" id="fname" name="fname" placeholder="Payload Name">
-                <input type="text" id="lname" name="lname" placeholder="Payload Category">
+                <input type="text" id="pnamec" name="fname" placeholder="Payload Name">
+                <input type="text" id="pcatc" name="lname" placeholder="Payload Category">
+                <div style="margin-bottom:20px;">
+                    <label for="os">OS:</label>
+                    <select name="os" id="osc">
+                        <option value="Linux">Linux</option>
+                        <option value="Mac">Mac</option>
+                        <option value="Windows">Windows</option>
+                        <option value="Starred">Starred</option>
+                    </select>
+                </div>
             </div>
             <!-- <input type="submit" value="Submit"> -->
 
-            <textarea id="w3review" name="w3review" rows="10" placeholder="Start writing payload here!"></textarea>
+            <textarea id="textarea1" name="w3review" rows="10" placeholder="Start writing payload here!"></textarea>
+
+            <p id="statusText"></p>
+
             <span>
-                <button class="edit">Save</button>
-                <button class="run">Run Live</button>
+                <button class="edit" onclick="saveNew()">Save</button>
+                <button class="run" onclick="runLive()">Run Live</button>
             </span>
         </div>
 
 
         <div style="text-align: center; margin-top: 10em">
             <p><b>Copyright 2022, HakCat Hardware</b></p>
-            <p>Beta v1.0</p>
+            <p>Beta v1.0.4</p>
         </div>
     </div>
+    <script src="run.js"></script>
 </body>
 
 </html>

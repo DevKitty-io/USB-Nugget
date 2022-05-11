@@ -2,14 +2,14 @@ function loadPayloadTables() {
     console.log("Loading payloads...");
 
     const xhttp = new XMLHttpRequest();
-    xhttp.open("GET", "http://localhost/data.json?rand=" + Date.now(), false); // prove endpoint to return json
+    xhttp.open("GET", "/data.json?rand=" + Date.now(), false); // prove endpoint to return json
     xhttp.send(null);
 
     var json = xhttp.responseText;
     const obj = JSON.parse(json);
     const pTables = ["tableStarred", "tableLinux", "tableMac", "tableWindows"];
     const pTypes = ["Starred", "Linux", "Mac", "Windows"];
-    const pEditOs = ["editStarred", "editLinux", "editMac", "editWindows"]
+    const pEditOs = ["editStarred", "editLinux", "editMac", "editWindows"];
 
     // append to each table
     for (let i = 0; i < 4; i++) {
@@ -64,6 +64,7 @@ function editPayload(payloadPath, payloadEdit) {
 <button class=\"run\" onclick=\"runLive(\'"+payloadEdit+"\')\">Run Live</button> \
 <button class=\"edit\" onclick=\"savePayload('"+payloadEdit+"','"+payloadPath+"')\">Save</button> \
 <button class=\"close\" onclick=\"closeEdit()\">Close</button> \
+<button class=\"run\" onclick=\"deletePayload('"+payloadPath+"')\">Delete</button> \
 </div> \
 ";
 }
@@ -98,4 +99,31 @@ function savePayload(payloadEdit, payloadPath) {
     xmlHttp.open("POST", "savepayload.php");
     xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     xmlHttp.send("path="+payloadPath+"&content="+btoa(textarea1.value));
+}
+
+function deletePayload(payloadPath) {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("POST", "deletepayload.php");
+    xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xmlHttp.send("path="+payloadPath);
+
+    setTimeout( function () { location.reload(); }, 2000 );
+ 
+}
+
+function saveNew() {
+    var payloadname = document.getElementById("pnamec").value;
+    var payloadcat = document.getElementById("pcatc").value;
+    var payloados = document.getElementById("osc").value;
+
+    if (payloadname != "" && payloadcat != "") {
+        var newpath = "/"+payloados+"/"+payloadcat+"/"+payloadname;
+        document.getElementById("statusText").innerHTML="<p>Saved: <b>"+newpath+"</b></p>";
+    }
+    else {
+        document.getElementById("statusText").innerHTML="<p>Can't save payload!  Please check the name & category fields.</p>";
+    }
+
+    savePayload("lolz", newpath);
+    
 }

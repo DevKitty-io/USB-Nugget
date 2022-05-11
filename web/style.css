@@ -77,10 +77,11 @@ nav {
     background-color: #263238;
 }
 
-table, textarea {
+table, textarea, input, select {
     border-radius: 5px;
     background-color: #263238;
     border: 1px solid #25282c;
+    color: white;
 }
 
 nav a {
@@ -120,9 +121,12 @@ body {
 }
 
 input {
-    width: 50%;
+    width: 100%;
     box-sizing: border-box;
-    padding: 0;
-    margin: 0;
+    padding: 10px;
+    margin-bottom: 20px;
+}
 
+select {
+    padding: 10px;
 }

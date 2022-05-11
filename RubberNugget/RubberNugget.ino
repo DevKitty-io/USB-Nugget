@@ -21,6 +21,7 @@ extern SH1106Wire display;
 extern String rubberCss;
 extern String rubberHtml;
 extern String rubberJs;
+extern String createHtml;
 
 extern String payloadPath;
 bool webstuffhappening = false;
@@ -51,14 +52,43 @@ void stylesheet() {
   server.send(200, "text/css", runCss);
 }
 
+void create() {
+  server.send(200, "text/html", createHtml);
+}
+
 void javascript() {
   server.send(200, "text/javascript", runJs);
+}
+
+void delpayload() {
+  String path = (server.arg("path"));
+  char tab2[100];
+  strcpy(tab2, path.c_str());
+  f_unlink(tab2);
+  server.send(200);
 }
 
 void websave() {
   String path = (server.arg("path"));
   String content = (server.arg("content"));
   content.replace(" ", "/");
+
+  FRESULT fr;
+  FIL file;
+  uint16_t size;
+  UINT bytesRead;
+
+
+  FILINFO fno;
+  char tab1[100];
+  strcpy(tab1, path.substring(0,path.lastIndexOf("/")).c_str());
+
+  fr = f_stat(tab1, &fno);
+
+  if (fr!=FR_OK) {
+    Serial.println((char*) tab1);
+    f_mkdir(tab1);
+  }
 
   char tab2[100];
   strcpy(tab2, path.c_str());
@@ -69,10 +99,7 @@ void websave() {
   uint8_t raw[BASE64::decodeLength(tab3)];
   BASE64::decode(tab3, raw);
 
-  FRESULT fr;
-  FIL file;
-  uint16_t size;
-  UINT bytesRead;
+
 
   fr = f_open(&file, tab2, FA_WRITE | FA_CREATE_ALWAYS);
   if (fr == FR_OK) {
@@ -181,9 +208,11 @@ void setup() {
   server.on("/style.css", stylesheet);
 
   server.on("/savepayload.php", HTTP_POST, websave);
+  server.on("/deletepayload.php", HTTP_POST, delpayload);
   server.on("/runlive.php", HTTP_POST, webrunlive);
   server.on("/getpayload.php", HTTP_GET, webget);
   server.on("/runpayload.php", HTTP_GET, webrun);
+  server.on("/create.html", create);
 
   server.begin();
 
