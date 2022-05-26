@@ -1,7 +1,7 @@
-#define up 9 // left button
-#define dn 18 // right button
-#define lt 11 // left button
-#define rt 7 // right button
+#define up_btn 9 // left button
+#define dn_btn 18 // right button
+#define lt_btn 11 // left button
+#define rt_btn 7 // right button
     
 #include "RubberNugget.h"
 #include "Arduino.h"
@@ -15,7 +15,7 @@
 
 SH1106Wire display(0x3C, 33, 35);
 
-Nugget_Buttons nuggButtons(up,dn,lt,rt);
+Nugget_Buttons nuggButtons(up_btn,dn_btn,lt_btn,rt_btn);
 
 extern bool webstuffhappening;
 
