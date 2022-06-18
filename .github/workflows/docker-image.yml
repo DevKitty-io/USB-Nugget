@@ -1,10 +1,12 @@
-name: Docker Image CI
+name: RubberNugget CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, bp-dev ]
+    paths: [ "src/**" ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, bp-dev ]
+    paths: [ "src/**" ]
 
 jobs:
   build:
