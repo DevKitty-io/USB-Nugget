@@ -16,5 +16,5 @@ jobs:
     - name: Build the Docker image
       run: |
         cd src
-        docker build . --file Dockerfile --tag rubber-nugget:$(date +%s)
+        make build
 

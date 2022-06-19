@@ -24,6 +24,11 @@ RUN ./arduino-cli lib install --git-url \
     "https://github.com/chegewara/EspTinyUSB" \
     "https://github.com/HakCat-Tech/Nugget_Display"
 
-COPY RubberNugget ./RubberNugget
+# Patch to force esptool to use no_reset option. This is necessary because
+# arduino-cli does not provide an option to forward this flag. This may become
+# unncessary when esp32s2 is better supported.
+RUN sed -i '/.*args = parser.parse_args(argv)/a\ \ \ \ args.after="no_reset"' /root/.arduino15/packages/esp32/tools/esptool_py/3.3.0/esptool.py
 
+COPY RubberNugget ./RubberNugget
+COPY scripts.img .
 RUN ./arduino-cli compile -b esp32:esp32:esp32s2 --build-property build.partitions=noota_3gffat RubberNugget/
