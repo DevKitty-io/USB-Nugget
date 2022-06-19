@@ -31,4 +31,6 @@ RUN sed -i '/.*args = parser.parse_args(argv)/a\ \ \ \ args.after="no_reset"' /r
 
 COPY RubberNugget ./RubberNugget
 COPY scripts.img .
-RUN ./arduino-cli compile -b esp32:esp32:esp32s2 --build-property build.partitions=noota_3gffat RubberNugget/
+RUN ./arduino-cli compile -b esp32:esp32:esp32s2 RubberNugget \
+    --build-property build.partitions=noota_3gffat \
+    --build-property build.cdc_on_boot=1
