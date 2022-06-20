@@ -3,7 +3,6 @@ A versatile USB attack platform that lets you hack computers in seconds using a 
 
 <img src="images/RubberNugget-Features.png"  />
 
-
 ## To install the new RubberNugget:
 1.	Download the .BIN file here: [(direct link)](https://github.com/HakCat-Tech/RubberNugget/releases/) or from the release page: https://github.com/HakCat-Tech/RubberNugget/releases/
 2.	Take your S2 Nugget out of its case
@@ -36,3 +35,26 @@ To access the web interface, connect to the `RubberNugget` AP with the password 
     - Live command preview
     - Deploy payloads in 3 clicks
     - Reactive RGB NeoPixel
+
+## Building / flashing from source
+Dependencies: docker, make.
+Docker is used to produce a replicable build environment and ensure library/tool dependensies are met.
+```
+# Clone the repo
+git clone https://github.com/HakCat-Tech/RubberNugget.git
+
+# Navigate to src
+cd RubberNugget/src
+
+# Build
+sudo make build
+
+# Build and flash the esp8266-s2 (may need sudo)
+sudo make flash
+#optionally specify port: sudo make flash PORT=<port>
+#optionally install default scripts: sudo make flash RESET_SCRIPTS_DURING_FLASH=true
+
+# Produce .img for release
+sudo make generate_img
+```
+
