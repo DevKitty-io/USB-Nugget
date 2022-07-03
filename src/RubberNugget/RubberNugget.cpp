@@ -137,12 +137,12 @@ void RubberNugget::init() {
     }    
 }
 
-bool keyKnown (String keyPress) {
+bool keyKnown(String keyPress) {
   Serial.print("looking for: ");
   Serial.println(keyPress);
   for (int i=0; i< (sizeof(keyMapRN)/sizeof(keyMapRN[0])); i++) {
     if (keyPress.equals(keyMapRN[i].title)) {
-      Serial.println(keyMapRN[i].title);
+      Serial.print(keyMapRN[i].title);
       Serial.println(" found!");
       return true;
     }
@@ -150,11 +150,10 @@ bool keyKnown (String keyPress) {
   return false;
 }
 
-void pressKey(String keyPress) {
-  delay(2);
+void pressNamedKey(String keyPress, uint8_t modifiers) {
   for (int i=0; i< (sizeof(keyMapRN)/sizeof(keyMapRN[0])); i++) {
     if (keyPress.equals(keyMapRN[i].title)) {
-      keyboard.sendPress(keyMapRN[i].key);
+      keyboard.sendPress(keyMapRN[i].key, modifiers);
     }
   }
 }
@@ -232,48 +231,46 @@ void processDuckyScript(String ducky) {
   }  
   
   else if (keyKnown(tCommand)) {
-    ::display.drawString(3,12,"KEY PRESS:");
-    
-    if (String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())).length() > 11) {
-      ::display.drawString(3,22,String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())).substring(0,8)+"...");
-    }
-    else {
-      ::display.drawString(3,22,String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())));
-    }
-    display.drawXbm(0, 0, 128, 64, high_signal_bits);
-    payloadRun.updateDisplay();
-    delay(defaultDelay*10);
-    
-    pressKey(tCommand); // press first
-    
-    String duckyCurrent;
-    duckyCurrent = ducky;
-    duckyCurrent.toUpperCase();
+    ::display.drawString(3,12,"KEY PRESS");
+    ducky.trim(); // remove leading, trailing whitespace
+    int currentTokenLeftIndex = 0;
+    int currentTokenRightIndex = 0;
+    String currentToken;
+    uint8_t modifiers = 0;
 
-    Serial.println(duckyCurrent.indexOf(" "));
-    
-    while (duckyCurrent.indexOf(" ")>-1) {
-      
-      duckyCurrent = duckyCurrent.substring(duckyCurrent.indexOf(' ')+1, duckyCurrent.length()); // trim off next part of string
-      String dCommand = (String) duckyCurrent.substring(0,(duckyCurrent.indexOf(' ')));
-      
-      if (dCommand.length() == 1) {
-        const char* meow = dCommand.c_str();
-        uint8_t keycode = (uint8_t) meow[0];
-
-        Serial.print(meow); Serial.print("  ");
-        Serial.println(keycode);
-        Serial.println(keymap[keycode].usage);
-
+    while (currentTokenLeftIndex < ducky.length()) {
+      int nextSpace = ducky.indexOf(' ', currentTokenLeftIndex);
+      if (nextSpace==-1){
+        currentTokenRightIndex = ducky.length();
+      } else {
+        currentTokenRightIndex = nextSpace;
+      }
+      currentToken = ducky.substring(currentTokenLeftIndex, currentTokenRightIndex);
+      if (currentToken == "CTRL" || currentToken == "CONTROL"){
+        modifiers += KEY_CTRL;
+      } else if (currentToken == "SHIFT"){
+        modifiers += KEY_SHIFT;
+      } else if (currentToken == "ALT") {
+        modifiers += KEY_ALT;
+      } else if (currentToken.length() != 1) {
+        // Search for named key, e.g. DELETE or TAB
+        if (keyKnown(currentToken)){
+          pressNamedKey(currentToken, modifiers);
+          delay(2);
+        } else {
+          // unknown named key
+          ::display.drawString(3,22,String("ERROR"));
+          payloadRun.updateDisplay();
+          delay(1000);
+        }
+      } else {
+        // Single letter like the 's' in: CTRL s
+        unsigned char keycode = keymap[currentToken[0]].usage;
+        keyboard.sendPress(keycode, modifiers);
         delay(2);
-        keyboard.sendPress(keymap[keycode].usage, 0);
       }
-      else {
-        pressKey(dCommand);
-      }
-      
+      currentTokenLeftIndex = currentTokenRightIndex + 1;
     }
-    delay(2);
     keyboard.sendRelease();
   }
   else {
