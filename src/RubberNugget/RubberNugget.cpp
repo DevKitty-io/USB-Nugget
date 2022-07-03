@@ -129,8 +129,6 @@ void RubberNugget::init() {
     EspTinyUSB::registerDeviceCallbacks(new Device());
 
     // create default folders if they don't exist
-    
-    
     for (int i=0; i<4; i++) {
       res = f_stat(osList[i], &fno);
       if (res!= FR_OK) {

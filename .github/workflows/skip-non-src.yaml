@@ -1,0 +1,13 @@
+name: RubberNugget CI
+
+on:
+  push:
+    branches: [ main, bp-dev ]
+  pull_request:
+    branches: [ main, bp-dev ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "src not modified; no build required"'
