@@ -3,7 +3,11 @@ RESET_SCRIPTS_DURING_FLASH ?= false
 IMAGE_NAME = rubber-nugget
 CONTAINER_NAME := $(IMAGE_NAME)-$(shell date +%s)
 
-build:
+submodules:
+	git submodule init
+	git submodule update
+
+build: submodules
 	docker build . --file Dockerfile --tag rubber-nugget
 
 flash: check_port build

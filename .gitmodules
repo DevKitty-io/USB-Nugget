@@ -1,0 +1,9 @@
+[submodule "src/third_party/EspTinyUSB"]
+	path = src/third_party/EspTinyUSB
+	url = https://github.com/chegewara/EspTinyUSB.git
+[submodule "src/third_party/arduino_base64"]
+	path = src/third_party/arduino_base64
+	url = https://github.com/dojyorin/arduino_base64
+[submodule "src/third_party/Nugget_Display"]
+	path = src/third_party/Nugget_Display
+	url = https://github.com/HakCat-Tech/Nugget_Display
