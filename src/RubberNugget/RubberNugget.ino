@@ -38,8 +38,11 @@ TaskHandle_t webapp;
 TaskHandle_t nuggweb;
 
 void getPayloads() {
-  Serial.println(RubberNugget::getPayloads());
-  server.send(200, "application/json", RubberNugget::getPayloads());
+  //Serial.println(RubberNugget::getPayloads());
+  //server.send(200, "application/json", RubberNugget::getPayloads());
+  String* payloadPaths = RubberNugget::allPayloadPaths();
+  Serial.printf("[SERVER][getPayloads] %s\n", payloadPaths->c_str());
+  server.send(200, "text/plain", *payloadPaths);
 }
 
 void handleRoot() {
@@ -190,9 +193,7 @@ void webrun() {
 
 void setup() {
   pinMode(12, OUTPUT); delay(500);
-
-
-  Serial.println(115200);
+  Serial.begin(115200);
 
   WiFi.softAP(ssid, password);
   IPAddress myIP = WiFi.softAPIP();
@@ -218,18 +219,12 @@ void setup() {
 
   strip.begin(); strip.clear(); strip.show();
   strip.setPixelColor(0, strip.Color(0, 0, 0)); strip.show();
-
   strip.setBrightness(100);
-  payloadSelector.addNav(RubberNugget::selectPayload);
 
   // initialize & launch payload selector
   RubberNugget::init();
   xTaskCreate(webserverInit, "webapptask", 12 * 1024, NULL, 5, &webapp); // create task priority 1
-  RubberNugget::selectPayload("/");
-
-  // udpates nav map & path infinitely
-  payloadSelector.autoUpdateDisplay();
-
+  RubberNugget::selectPayload();
 }
 
 void loop() {
