@@ -4,6 +4,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
     wget \
+    zip \
     xz-utils \
     python3 python3-pip
 RUN pip3 install pyserial esptool
@@ -19,10 +20,8 @@ RUN ./arduino-cli core install esp32:esp32
 RUN ./arduino-cli lib install \
     "ESP8266 and ESP32 OLED driver for SSD1306 displays" \
     "Adafruit NeoPixel"
-RUN ./arduino-cli lib install --git-url \
-    "https://github.com/dojyorin/arduino_base64" \
-    "https://github.com/chegewara/EspTinyUSB" \
-    "https://github.com/HakCat-Tech/Nugget_Display"
+COPY third_party ./third_party
+RUN ./third_party/arduino_cli_install.sh $(readlink -f ./arduino-cli)
 
 # Patch to force esptool to use no_reset option. This is necessary because
 # arduino-cli does not provide an option to forward this flag. This may become
