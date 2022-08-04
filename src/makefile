@@ -27,7 +27,7 @@ generate_img: check_port build
 	docker exec $(CONTAINER_NAME) bash -c \
 		'python3 -m esptool --after no_reset erase_flash && sleep 2 && \
 		./arduino-cli upload -b esp32:esp32:esp32s2 --port $(PORT) RubberNugget/ && sleep 2 && \
-		python3 -m esptool --after no_reset write_flash 0x110000 scripts.img && sleep 2 && \
+		python3 -m esptool --after no_reset write_flash 0x110000 default.img && sleep 2 && \
 		python3 -m esptool --after no_reset read_flash 0x0 0x400000 /rubber_nugget.img'
 	docker cp $(CONTAINER_NAME):/rubber_nugget.img .
 	docker rm --force $(CONTAINER_NAME)
