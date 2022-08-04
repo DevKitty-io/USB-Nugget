@@ -1,0 +1,370 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            * { 
+                --textcolor: white;
+                --bgcolor: black;
+            }
+            body {
+                font-size: 18px;
+                font-family: 'Courier New', Courier, monospace;
+                line-height: 1.4;
+                color: var(--textcolor);
+                background: var(--bgcolor);
+                max-width: 48em;
+                margin: 0 auto;  /* centers the layout */
+            }
+            header {
+                width: 100%;
+                display: flex;
+                color: var(--textcolor);
+                border-bottom: 1px solid var(--textcolor);
+                margin-top: 2em;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: flex-end;
+            }
+            header > h1 {
+                white-space: nowrap;
+                margin-bottom: 0;
+            }
+            .nav {
+                display: flex;
+            }
+            .nav > a {
+                color: var(--textcolor);
+                font-family: 'Courier New', Courier, monospace;
+                text-decoration: none;
+                font-weight: bold;
+                border-right: 1px solid var(--textcolor);
+                padding: 10px;
+                border-top: 1px solid var(--textcolor);
+            }
+            .nav > a:first-child {
+                border-left: 1px solid var(--textcolor);
+            }
+            section {
+                display: none;
+                width: 100%;
+                background: var(--bgcolor);
+                padding-top: calc(3em + 2vw);
+                padding-bottom: 8vw;
+                font-family: 'Courier New', Courier, monospace;
+            }
+            section:target { /* Show section */
+                display: block;
+            }
+            #create > input, textarea {
+                width:100%;
+                margin-bottom: 1em;
+                padding: 1em;
+                font-family: 'Courier New', Courier, monospace;
+                color: var(--textcolor);
+                border-radius: 0;
+                border: 0;
+                outline: 0;
+                background: transparent;
+                border-bottom: 1px solid var(--textcolor);
+                font-size: 0.8em;
+            }
+            section > h2,h3 {
+                margin-bottom: 1em;
+                font-family: 'Courier New', Courier, monospace;
+            }
+            section button {
+                border: 1px solid var(--textcolor);
+                color: var(--textcolor);
+                background-color: black;
+                font-family: 'Courier New', Courier, monospace;
+            }
+            #create > button {
+                padding: 1em;
+            }
+            #edit button {
+                padding: 1em;
+            }
+            section button:hover {
+                color: black;
+                background-color: var(--textcolor);
+            }
+            section button:active {
+                border: 1px solid var(--textcolor);
+                color: var(--textcolor);
+                background-color: black;
+            }
+
+            #edit > #editPayloadPath{
+                border-bottom: 1px solid var(--textcolor);
+            }
+
+            #edit > .buttonContainer {
+                display: flex;
+                justify-content: space-between;
+            }
+            
+            .directory-list ul {
+                margin-left: 10px;
+                padding-left: 20px;
+                border-left: 1px dashed var(--textcolor);
+                font-family: 'Courier New', Courier, monospace;
+            }
+
+            .directory-list li {
+                list-style: none;
+                color: var(--textcolor);
+                font-family: 'Courier New', Courier, monospace;
+                overflow:hidden;
+            }
+
+            .directory-list li.file > span {
+                float: right;
+                overflow:hidden;
+            }
+
+            .directory-list button{
+                margin-left: 5px;
+            }
+
+            .directory-list li:before {
+                margin-right: 10px;
+                content: "";
+                height: 20px;
+                vertical-align: middle;
+                width: 20px;
+                background-repeat: no-repeat;
+                display: inline-block;
+                /* file icon by default */
+                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill='lightgrey' d='M85.714,42.857V87.5c0,1.487-0.521,2.752-1.562,3.794c-1.042,1.041-2.308,1.562-3.795,1.562H19.643 c-1.488,0-2.753-0.521-3.794-1.562c-1.042-1.042-1.562-2.307-1.562-3.794v-75c0-1.487,0.521-2.752,1.562-3.794 c1.041-1.041,2.306-1.562,3.794-1.562H50V37.5c0,1.488,0.521,2.753,1.562,3.795s2.307,1.562,3.795,1.562H85.714z M85.546,35.714 H57.143V7.311c3.05,0.558,5.505,1.767,7.366,3.627l17.41,17.411C83.78,30.209,84.989,32.665,85.546,35.714z' /></svg>");
+                background-position: center 2px;
+                background-size: 60% auto;
+            }
+
+            .directory-list li.dir:before {
+                /* folder icon if folder class is specified */
+                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill='white' d='M96.429,37.5v39.286c0,3.423-1.228,6.361-3.684,8.817c-2.455,2.455-5.395,3.683-8.816,3.683H16.071 c-3.423,0-6.362-1.228-8.817-3.683c-2.456-2.456-3.683-5.395-3.683-8.817V23.214c0-3.422,1.228-6.362,3.683-8.817 c2.455-2.456,5.394-3.683,8.817-3.683h17.857c3.422,0,6.362,1.228,8.817,3.683c2.455,2.455,3.683,5.395,3.683,8.817V25h37.5 c3.422,0,6.361,1.228,8.816,3.683C95.201,31.138,96.429,34.078,96.429,37.5z' /></svg>");
+                background-position: center top;
+                background-size: 75% auto;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>>_ RUBBER NUGGET</h1>
+            <span class="nav">
+                <a href="#run">RUN SCRIPT</a>
+                <a href="#create">CREATE</a>
+            </span>
+        </header>
+        <section id="run">
+            <h2>SELECT PAYLOAD</h2>
+            <div id="payloads">
+            </div>
+        </section>
+        <section id="create">
+            <h2>CREATE PAYLOAD</h2>
+            <input id="createPayloadPath" placeholder="Payload path, e.g. /mypayload"></input><br>
+            <textarea id="createPayloadContent" rows="10" placeholder="Enter payload"></textarea>
+            <button id="createSaveButton">SAVE FILE</button>
+            <button id="createRunLiveButton">RUN LIVE</button>
+        </section>
+        <section id="edit">
+            <h2>EDIT PAYLOAD</h2>
+            <p id="editPayloadPath"></p>
+            <textarea id="editPayloadContent" rows="20" placeholder="Loading..."></textarea>
+                <div class="buttonContainer">
+                    <div>
+                        <button id="editSaveButton">SAVE</button>
+                        <button id="editRunButton">RUN</button>
+                    </div>
+                    <button id="editDeleteButton">DELETE</button>
+                </div>
+        </section>
+    </body>
+
+    <script>
+        function getPayloadPaths() {
+            const xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "/payloads", false);
+            xhttp.send();
+
+            var csv = xhttp.responseText.split(",")
+            if(csv[csv.length-1]==''){
+                csv.pop()
+            }
+            return csv
+        }
+        function runPayload(path) {
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", "runpayload?path="+path, false)
+            xmlHttp.send();
+            return xmlHttp.responseText;
+        }
+        function runLive(payloadText) {
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("POST", "runlive");
+            xmlHttp.setRequestHeader("Content-Type", "plain/text");
+            xmlHttp.send(btoa(payloadText));
+        }
+        function deletePayload(payloadPath) {
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("POST", "deletepayload");
+            xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xmlHttp.send("path="+payloadPath);
+            setTimeout( function () { location.reload(); }, 200 );
+        }
+        function pathCorrection(path) {
+            let fixed = []
+            for (const part of path.split("/")){
+                if (part===""){
+                    continue
+                }
+                fixed.push(part)
+            }
+            return "/"+fixed.join("/")
+        }
+        function savePayload(path, payloadText) {
+            // encode payloadText as base64 and send 
+            path = pathCorrection(path)
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("POST", "savepayload", false);
+            xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xmlHttp.send("path="+path+"&payloadText="+btoa(payloadText));
+        }
+        function getPayloadPathsMocks(){
+            return ["/one", "/folder1/script.txt", "/folder1/otherscript", "this shouldn't appear"]
+        }
+        // from a list of paths, generate a tree
+        function generateFileStructure(payloadPaths) {
+            let tree = new Map();
+            for (let path of payloadPaths) {
+                pathElems = path.split("/");
+                // because every path should start with "/", reject paths that
+                // do not start with ""
+                if (pathElems.length < 1 || pathElems[0]!== ""){
+                    continue
+                }
+                pathElems[0]="/"
+                let lastNode = tree
+                for (let i = 0; i < pathElems.length; i++){
+                    node = lastNode.get(pathElems[i])
+                    if (node===undefined) {
+                        let newNode = new Map()
+                        lastNode.set(pathElems[i], newNode)
+                        lastNode = newNode
+                        continue
+                    } 
+                    lastNode = node
+                }
+            }
+            return tree
+        }
+        function removeChildren(parent) {
+            while (parent.firstChild){
+                parent.removeChild(parent.firstChild)
+            }
+        }
+        function generateScriptElements(tree) {
+            function recursiveGeneration(node, name, fullPath){
+                if (node.size === 0) { // is file
+                    return newPayloadElem(name, fullPath)
+                }
+                let subfiles = document.createElement("ul")
+                subfiles.className = "dir"
+                for (const fileEntry of node.keys()){
+                    let newFullPath = fullPath + fileEntry
+                    if (fullPath!="/" && fullPath!="") {
+                        newFullPath = fullPath + "/" + fileEntry
+                    }
+                    let fileElem = recursiveGeneration(node.get(fileEntry), fileEntry, newFullPath)
+                    subfiles.appendChild(fileElem)
+                }
+                if (name!=undefined) {
+                    let dir = document.createElement("li")
+                    dir.className = "dir"
+                    dir.innerHTML=name
+                    dir.appendChild(subfiles)
+                    return dir
+                }
+                return subfiles
+            }
+            let treeElem = recursiveGeneration(tree, undefined, "")
+            treeElem.className = "directory-list"
+
+            let payloads = document.getElementById("payloads");
+            removeChildren(payloads);
+            payloads.appendChild(treeElem)
+        }
+        function switchToEdit(payloadPath) {
+            window.location.hash="edit"
+            let payloadContentElem = document.getElementById("editPayloadContent");
+            let payloadPathElem = document.getElementById("editPayloadPath");
+            payloadPathElem.innerHTML = payloadPath;
+
+            let xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", "getpayload?path="+payloadPath, false);
+            xmlHttp.send(null);
+            console.log(atob(xmlHttp.responseText))
+            payloadContentElem.innerHTML = atob(xmlHttp.responseText)
+
+            let saveBtn = document.getElementById("editSaveButton");
+            let runBtn = document.getElementById("editRunButton");
+            let deleteBtn = document.getElementById("editDeleteButton");
+            runBtn.onclick = ()=>{
+                runPayload(payloadContentElem.value)
+            }
+            saveBtn.onclick = ()=>{
+                savePayload(payloadPath, payloadContentElem.value)
+            }
+            deleteBtn.onclick = ()=>{
+                deletePayload(payloadPath)
+            }
+        }
+        function newPayloadElem(name, fullPath) {
+            let elem = document.createElement("li")
+            elem.className = "file"
+            elem.innerHTML = name
+
+            let buttonContainer = document.createElement("span")
+            elem.appendChild(buttonContainer)
+
+            let editButton = document.createElement("button")
+            let runButton = document.createElement("button")
+            editButton.innerHTML = "EDIT"
+            runButton.innerHTML = "RUN"
+            runButton.onclick = ()=>{runPayload(fullPath)}
+            editButton.onclick = ()=>{switchToEdit(fullPath)}
+            buttonContainer.appendChild(editButton)
+            buttonContainer.appendChild(runButton)
+            return elem
+        }
+        function prepareCreateSection() {
+            let saveBtn = document.getElementById("createSaveButton")
+            let runLiveBtn = document.getElementById("createRunLiveButton")
+
+            saveBtn.onclick = ()=>{
+                var payloadPathElem = document.getElementById("createPayloadPath")
+                var payloadPath = pathCorrection(payloadPathElem.value)
+                var payloadContent = document.getElementById("createPayloadContent").value
+                savePayload(payloadPath, payloadContent)
+            }
+            runLiveBtn.onclick = ()=>{
+                var payloadContent = document.getElementById("createPayloadContent").value
+                runLive(payloadContent)
+            }
+        }
+
+        if (window.location.hash === "" || window.location.hash === "#edit"){
+            window.location = window.location.pathname+"#run"
+            window.location.reload()
+            window.scrollTo(0, 0);
+        }
+
+        //let payloadPaths = getPayloadPathsMocks() // Uncomment for local debugging
+        let payloadPaths = getPayloadPaths()
+        let tree = generateFileStructure(payloadPaths)
+        generateScriptElements(tree)
+        prepareCreateSection()
+        console.log("Done")
+    </script>
+</html>

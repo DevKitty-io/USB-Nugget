@@ -17,7 +17,7 @@ flash: check_port build
 		'./arduino-cli upload -b esp32:esp32:esp32s2 --port $(PORT) RubberNugget/ && sleep 2'
 ifeq ($(RESET_SCRIPTS_DURING_FLASH), true)
 	docker exec $(CONTAINER_NAME) bash -c \
-		'python3 -m esptool --after no_reset write_flash 0x110000 scripts.img'
+		'python3 -m esptool --after no_reset write_flash 0x110000 default.img'
 endif
 	docker rm --force $(CONTAINER_NAME)
 

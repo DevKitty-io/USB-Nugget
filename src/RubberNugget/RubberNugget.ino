@@ -8,7 +8,7 @@
 #include <WiFiClient.h>
 #include <WebServer.h>
 
-#include "Webserver.h"
+#include "webUI/index.h"
 #include "SH1106Wire.h"
 #include "Nugget_Interface.h"
 
@@ -32,14 +32,13 @@ Adafruit_NeoPixel strip {1, 12, NEO_GRB + NEO_KHZ400 };
 
 const char *ssid = "RubberNugget";
 const char *password = "nugget123";
+
 WebServer server(80);
 
 TaskHandle_t webapp;
 TaskHandle_t nuggweb;
 
 void getPayloads() {
-  //Serial.println(RubberNugget::getPayloads());
-  //server.send(200, "application/json", RubberNugget::getPayloads());
   String* payloadPaths = RubberNugget::allPayloadPaths();
   Serial.printf("[SERVER][getPayloads] %s\n", payloadPaths->c_str());
   server.send(200, "text/plain", *payloadPaths);
@@ -48,19 +47,8 @@ void getPayloads() {
 void handleRoot() {
 //  Serial.println(ESP.getFreeHeap());
   Serial.println("handling root!");
-  server.send(200, "text/html", runHtml);
-}
-
-void stylesheet() {
-  server.send(200, "text/css", runCss);
-}
-
-void create() {
-  server.send(200, "text/html", createHtml);
-}
-
-void javascript() {
-  server.send(200, "text/javascript", runJs);
+  server.send(200, "text/html", String(INDEX));
+  //server.send(200, "text/html", runHtml);
 }
 
 void delpayload() {
@@ -73,7 +61,7 @@ void delpayload() {
 
 void websave() {
   String path = (server.arg("path"));
-  String content = (server.arg("content"));
+  String content = (server.arg("payloadText"));
   content.replace(" ", "/");
 
   FRESULT fr;
@@ -111,6 +99,7 @@ void websave() {
     fr = f_write(&file, (char*) raw, BASE64::decodeLength(tab3), &written);
     Serial.println(fr);
     f_close(&file);
+    server.send(200);
   }
 
 }
@@ -154,41 +143,45 @@ void webget() {
   UINT bytesRead;
 
   String path = server.arg("path");
-  char tab2[100];
-  strcpy(tab2, path.c_str());
+  fr = f_open(&file, path.c_str(), FA_READ);
 
-  fr = f_open(&file, tab2, FA_READ);
-
-  if (fr == FR_OK) {
-    size = f_size(&file);
-    char * data = NULL;
-
-    data = (char*) malloc(size);
-
-    fr = f_read(&file, data, (UINT) size, &bytesRead);
-    if (fr == FR_OK) {
-
-      String test = (String) data;
-      test = test.substring(0, bytesRead);
-      Serial.println(test);
-
-      String encoded = base64::encode(test);
-      server.send(200, "plain/text", encoded);
-      Serial.println(encoded);
-    }
-    f_close(&file);
+  if (fr != FR_OK) {
+    // TODO: most likely file not found, but we need to check why fr != OK.
+    // Marking 500 until resolved
+    server.send(500, "plain/text", String("Error loading script"));
+    return;
   }
+
+  size = f_size(&file);
+  char * data = NULL;
+
+  data = (char*) malloc(size);
+
+  fr = f_read(&file, data, (UINT) size, &bytesRead);
+  if (fr == FR_OK) {
+    String payload = String(data);
+    payload = payload.substring(0, bytesRead);
+    payload = base64::encode(payload);
+    server.send(200, "plain/text", payload);
+  } else {
+    server.send(500, "plain/text", String("Error reading script"));
+  }
+  f_close(&file);
 
 }
 
 // run payload with get request path
 void webrun() {
-  server.send(200, "text/hhtml", "");
+  server.send(200, "text/html", "");
   String path = server.arg("path");
-  char tab2[100];
-  strcpy(tab2, path.c_str());
+  RubberNugget::runPayload(path.c_str(), 1); // provide parameter triggered from webpage
+}
 
-  RubberNugget::runPayload(tab2, 1); // provide parameter triggered from webpage
+void webserverInit(void *p) {
+  while (1) {
+    server.handleClient();
+    vTaskDelay(2);
+  }
 }
 
 void setup() {
@@ -201,19 +194,12 @@ void setup() {
   Serial.println(myIP);
 
   server.on("/", handleRoot);
-  server.on("/data.json", getPayloads);
-
-  server.on("/run.html", handleRoot);
-  server.on("/run", handleRoot);
-  server.on("/run.js", javascript);
-  server.on("/style.css", stylesheet);
-
-  server.on("/savepayload.php", HTTP_POST, websave);
-  server.on("/deletepayload.php", HTTP_POST, delpayload);
-  server.on("/runlive.php", HTTP_POST, webrunlive);
-  server.on("/getpayload.php", HTTP_GET, webget);
-  server.on("/runpayload.php", HTTP_GET, webrun);
-  server.on("/create.html", create);
+  server.on("/payloads", getPayloads);
+  server.on("/savepayload", HTTP_POST, websave);
+  server.on("/deletepayload", HTTP_POST, delpayload);
+  server.on("/runlive", HTTP_POST, webrunlive);
+  server.on("/getpayload", HTTP_GET, webget);
+  server.on("/runpayload", HTTP_GET, webrun);
 
   server.begin();
 
@@ -229,11 +215,4 @@ void setup() {
 
 void loop() {
   return;
-}
-
-void webserverInit(void *p) {
-  while (1) {
-    server.handleClient();
-    vTaskDelay(2);
-  }
 }
