@@ -60,48 +60,51 @@ void delpayload() {
 }
 
 void websave() {
+  // path should be corrected, i.e. by index.html's pathCorrector function
+  // Each path should start with '/' and not end with '/'
   String path = (server.arg("path"));
-  String content = (server.arg("payloadText"));
-  content.replace(" ", "/");
+  const char* constPath = path.c_str();
 
-  FRESULT fr;
+  // construct directories as needed
+  FILINFO filinfo;
+  int pathSoFarIdx = 1;
+  while(true) {
+    int nextDir = path.indexOf("/", pathSoFarIdx);
+    if (nextDir == -1){
+      break;
+    }
+    String pathSoFar = path.substring(0, nextDir);
+    if (FR_OK != f_stat(pathSoFar.c_str(), &filinfo)){
+      if (f_mkdir(pathSoFar.c_str()) != FR_OK) {
+        server.send(500, "text/plain", "Could not create directory");
+        return;
+      }
+    }
+    pathSoFarIdx = nextDir+1;
+  }
+
+  // Create file
   FIL file;
-  uint16_t size;
-  UINT bytesRead;
-
-
-  FILINFO fno;
-  char tab1[100];
-  strcpy(tab1, path.substring(0,path.lastIndexOf("/")).c_str());
-
-  fr = f_stat(tab1, &fno);
-
-  if (fr!=FR_OK) {
-    Serial.println((char*) tab1);
-    f_mkdir(tab1);
+  if (FR_OK != f_open(&file, constPath, FA_WRITE | FA_CREATE_ALWAYS)){
+    server.send(500, "text/plain", "Could not open file for writing");
+    return;
   }
 
-  char tab2[100];
-  strcpy(tab2, path.c_str());
-
-  char tab3[content.length() + 1];
-  strcpy(tab3, content.c_str());
-
-  uint8_t raw[BASE64::decodeLength(tab3)];
-  BASE64::decode(tab3, raw);
-
-
-
-  fr = f_open(&file, tab2, FA_WRITE | FA_CREATE_ALWAYS);
-  if (fr == FR_OK) {
-    Serial.println("opened: " + path);
-    UINT written = 0;
-    fr = f_write(&file, (char*) raw, BASE64::decodeLength(tab3), &written);
-    Serial.println(fr);
+  // Write to file
+  String content = (server.arg("payloadText"));
+  content.replace(" ", "/"); // why
+  const char* contentBase64 = content.c_str();
+  size_t payloadLength = BASE64::decodeLength(contentBase64);
+  uint8_t payloadContent[payloadLength];
+  BASE64::decode(contentBase64, payloadContent);
+  UINT written = 0;
+  if (FR_OK != f_write(&file, payloadContent, payloadLength, &written)){
+    server.send(500, "text/plain", "Could not write to file");
     f_close(&file);
-    server.send(200);
+    return;
   }
-
+  f_close(&file);
+  server.send(200, "text/plain", "Payload created successfully");
 }
 
 // decode base 64 and run
