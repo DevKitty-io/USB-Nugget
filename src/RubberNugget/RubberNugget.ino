@@ -48,15 +48,16 @@ void handleRoot() {
 //  Serial.println(ESP.getFreeHeap());
   Serial.println("handling root!");
   server.send(200, "text/html", String(INDEX));
-  //server.send(200, "text/html", runHtml);
 }
 
 void delpayload() {
-  String path = (server.arg("path"));
-  char tab2[100];
-  strcpy(tab2, path.c_str());
-  f_unlink(tab2);
-  server.send(200);
+  String path(server.arg("path"));
+  FRESULT res = f_unlink(path.c_str());
+  if (res == FR_OK){
+    server.send(200);
+  } else {
+    server.send(500);
+  }
 }
 
 void websave() {
@@ -107,9 +108,9 @@ void websave() {
   server.send(200, "text/plain", "Payload created successfully");
 }
 
-// decode base 64 and run
-
+// decode base64 and run
 void webrunlive() {
+  server.send(200, "text/plain", "Running payload...");
   if (server.hasArg("plain")) {
     Serial.print("Decoding: ");
     String decoded = (server.arg("plain"));
@@ -133,10 +134,7 @@ void webrunlive() {
     RubberNugget::runLivePayload(meow);
     Serial.println();
     Serial.println("-------");
-
-
   }
-
 }
 
 void webget() {
@@ -175,7 +173,7 @@ void webget() {
 
 // run payload with get request path
 void webrun() {
-  server.send(200, "text/html", "");
+  server.send(200, "text/html", "Running payload...");
   String path = server.arg("path");
   RubberNugget::runPayload(path.c_str(), 1); // provide parameter triggered from webpage
 }

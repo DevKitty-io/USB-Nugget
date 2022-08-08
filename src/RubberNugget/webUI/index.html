@@ -5,6 +5,8 @@
             * { 
                 --textcolor: white;
                 --bgcolor: black;
+                --success: green;
+                --failure: red;
             }
             body {
                 font-size: 18px;
@@ -44,11 +46,16 @@
             .nav > a:first-child {
                 border-left: 1px solid var(--textcolor);
             }
+            #operationResult {
+                margin: 1em;
+                padding: 1em;
+                visibility: hidden;
+            }
             section {
                 display: none;
                 width: 100%;
                 background: var(--bgcolor);
-                padding-top: calc(3em + 2vw);
+                padding-top: calc(2em);
                 padding-bottom: 8vw;
                 font-family: 'Courier New', Courier, monospace;
             }
@@ -156,6 +163,7 @@
                 <a href="#create">CREATE</a>
             </span>
         </header>
+        <div id="operationResult"></div>
         <section id="run">
             <h2>SELECT PAYLOAD</h2>
             <div id="payloads">
@@ -175,7 +183,7 @@
                 <div class="buttonContainer">
                     <div>
                         <button id="editSaveButton">SAVE</button>
-                        <button id="editRunButton">RUN</button>
+                        <button id="editRunLiveButton">RUN LIVE</button>
                     </div>
                     <button id="editDeleteButton">DELETE</button>
                 </div>
@@ -195,23 +203,58 @@
             return csv
         }
         function runPayload(path) {
+            console.log("runninglive: ", path)
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.open("GET", "runpayload?path="+path, false)
             xmlHttp.send();
-            return xmlHttp.responseText;
+            showResponseResult(xmlHttp)
         }
         function runLive(payloadText) {
             var xmlHttp = new XMLHttpRequest();
-            xmlHttp.open("POST", "runlive");
+            xmlHttp.open("POST", "runlive", false);
             xmlHttp.setRequestHeader("Content-Type", "plain/text");
             xmlHttp.send(btoa(payloadText));
+            showResponseResult(xmlHttp)
         }
         function deletePayload(payloadPath) {
             var xmlHttp = new XMLHttpRequest();
-            xmlHttp.open("POST", "deletepayload");
+            xmlHttp.open("POST", "deletepayload", false);
             xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
             xmlHttp.send("path="+payloadPath);
-            setTimeout( function () { location.reload(); }, 200 );
+            showResponseResult(xmlHttp)
+            regenerateFileList()
+            window.location.hash = "#run"
+            window.scrollTo(0, 0);
+        }
+        function savePayload(path, payloadText) {
+            // encode payloadText as base64 and send
+            path = pathCorrection(path)
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("POST", "savepayload", false);
+            xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xmlHttp.send("path="+path+"&payloadText="+btoa(payloadText));
+            showResponseResult(xmlHttp, "Success")
+            regenerateFileList()
+        }
+        function showResponseResult(xmlHttpResponse, optionalMsgOverride){
+            let statusCode = xmlHttpResponse.status
+            let msg = xmlHttpResponse.responseText
+            if (msg == ""){
+                msg = statusCode==200 ? "Success" : "Failure"
+            }
+            let success = statusCode===200 ? true : false
+            operationResult(success, msg, 4000)
+        }
+        function operationResult(isSuccess, msg, msTimeDisplay){
+            var resultElem = document.getElementById("operationResult");
+            let style = getComputedStyle(document.body)
+            let successColor = style.getPropertyValue('--success')
+            let failureColor = style.getPropertyValue('--failure')
+
+            resultElem.style.backgroundColor = isSuccess ? successColor : failureColor;
+            resultElem.innerHTML = msg
+            resultElem.style.visibility = "visible"
+            setTimeout(()=>{resultElem.style.visibility = "hidden"}, msTimeDisplay)
         }
         function pathCorrection(path) {
             let fixed = []
@@ -222,14 +265,6 @@
                 fixed.push(part)
             }
             return "/"+fixed.join("/")
-        }
-        function savePayload(path, payloadText) {
-            // encode payloadText as base64 and send 
-            path = pathCorrection(path)
-            var xmlHttp = new XMLHttpRequest();
-            xmlHttp.open("POST", "savepayload", false);
-            xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-            xmlHttp.send("path="+path+"&payloadText="+btoa(payloadText));
         }
         function getPayloadPathsMocks(){
             return ["/one", "/folder1/script.txt", "/folder1/otherscript", "this shouldn't appear"]
@@ -297,7 +332,7 @@
         }
         function switchToEdit(payloadPath) {
             window.location.hash="edit"
-            let payloadContentElem = document.getElementById("editPayloadContent");
+            var payloadContentElem = document.getElementById("editPayloadContent");
             let payloadPathElem = document.getElementById("editPayloadPath");
             payloadPathElem.innerHTML = payloadPath;
 
@@ -305,13 +340,13 @@
             xmlHttp.open("GET", "getpayload?path="+payloadPath, false);
             xmlHttp.send(null);
             console.log(atob(xmlHttp.responseText))
-            payloadContentElem.innerHTML = atob(xmlHttp.responseText)
+            payloadContentElem.value = atob(xmlHttp.responseText)
 
             let saveBtn = document.getElementById("editSaveButton");
-            let runBtn = document.getElementById("editRunButton");
+            let runBtn = document.getElementById("editRunLiveButton");
             let deleteBtn = document.getElementById("editDeleteButton");
             runBtn.onclick = ()=>{
-                runPayload(payloadContentElem.value)
+                runLive(payloadContentElem.value)
             }
             saveBtn.onclick = ()=>{
                 savePayload(payloadPath, payloadContentElem.value)
@@ -353,18 +388,21 @@
                 runLive(payloadContent)
             }
         }
+        function regenerateFileList() {
+            let payloadPaths = getPayloadPaths()
+            //let payloadPaths = getPayloadPathsMocks() // Uncomment for local debugging
+            let tree = generateFileStructure(payloadPaths)
+            generateScriptElements(tree)
+        }
 
         if (window.location.hash === "" || window.location.hash === "#edit"){
             window.location = window.location.pathname+"#run"
             window.location.reload()
             window.scrollTo(0, 0);
         }
-
-        //let payloadPaths = getPayloadPathsMocks() // Uncomment for local debugging
-        let payloadPaths = getPayloadPaths()
-        let tree = generateFileStructure(payloadPaths)
-        generateScriptElements(tree)
+        regenerateFileList()
         prepareCreateSection()
         console.log("Done")
     </script>
+
 </html>
