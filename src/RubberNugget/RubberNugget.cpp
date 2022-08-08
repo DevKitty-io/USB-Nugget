@@ -460,6 +460,36 @@ bool displayFiles(FILINFO* files, String* currentPath, int numFiles, int selecte
   return true;
 }
 
+typedef enum {
+	BUTTON_UP = 0,
+	BUTTON_DOWN,
+	BUTTON_LEFT,
+	BUTTON_RIGHT,
+	BUTTON_NONE,
+} NUGGET_BUTTON;
+
+// https://hackaday.com/2015/12/10/embed-with-elliot-debounce-your-noisy-buttons-part-ii/
+NUGGET_BUTTON getPress() {
+  const int NUM_BUTTONS = 4;
+  static uint8_t buttonHistory[NUM_BUTTONS] = {0};
+  static uint8_t buttonPins[NUM_BUTTONS];
+  buttonPins[BUTTON_UP] = up_btn;
+  buttonPins[BUTTON_DOWN] = dn_btn;
+  buttonPins[BUTTON_LEFT] = lt_btn;
+  buttonPins[BUTTON_RIGHT] = rt_btn;
+
+  for (int i = 0; i < NUM_BUTTONS; i++){
+    uint8_t pressed = 0;
+    buttonHistory[i] = buttonHistory[i] << 1;
+    buttonHistory[i] |= digitalRead(buttonPins[i]);
+    if ((buttonHistory[i] | 0b00111000) == 0b11111000){
+      buttonHistory[i] = 0b00000000;
+      return (NUGGET_BUTTON)i;
+    }
+  }
+  return BUTTON_NONE;
+}
+
 // continue looping until user selects payloads
 void RubberNugget::selectPayload() {
   String currentPath("/");
@@ -476,24 +506,29 @@ void RubberNugget::selectPayload() {
   if (!ok) {
     Serial.println("[selectPayload][1] display files error");
   }
-  
+
   while (true) {
-    int press = nuggButtons.getPress();
-    if (press==1) { // up
+    NUGGET_BUTTON press = getPress();
+    if (press==BUTTON_NONE) {
+      delay(2);
+      continue;
+    }
+
+    if (press==BUTTON_UP) { // up
       if (fileListSelected != 0) {
         fileListSelected--;
       }
       if (fileListSelected < fileListTop) {
         fileListTop--;
       }
-    } else if (press==2) { // down
+    } else if (press==BUTTON_DOWN) { // down
       if (fileListSelected < numFiles-1) {
         fileListSelected++;
       }
       if (fileListSelected-fileListTop > MAX_FILE_SELECTIONS-1){
         fileListTop++;
       }
-    } else if (press==3) { // left
+    } else if (press==BUTTON_LEFT) { // left
         int lastSlash = currentPath.lastIndexOf("/");
         if (lastSlash == 0) {
           currentPath = "/";
@@ -504,7 +539,7 @@ void RubberNugget::selectPayload() {
         files = newFileList(currentPath.c_str(), numFiles);
         fileListSelected = 0;
         fileListTop = 0;
-    } else if (press==4) { // right
+    } else if (press==BUTTON_RIGHT) { // right
       if(files[fileListSelected].fattrib & AM_DIR){ // directory; enter it
         if (currentPath.length()!=1){
           currentPath += "/";
