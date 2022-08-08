@@ -434,7 +434,11 @@ bool displayFiles(FILINFO* files, String* currentPath, int numFiles, int selecte
   // loop condition: display only MAX_FILE_SELECTIONS at a time, and not more
   // than files we actually have.
   for (int i = top; i < top+MAX_FILE_SELECTIONS && i < numFiles; i++) {
-    ::display.drawString(6, 10*(i-top), files[i].fname); // TODO: truncate long names
+    String fileName(files[i].fname);
+    if (fileName.length() > 12) {
+      fileName = fileName.substring(0, 9) + "...";
+    }
+    ::display.drawString(6, 10*(i-top), fileName);
   }
   // Cursor
   ::display.drawRect(2,10*(selected-top)+6,2,2);
