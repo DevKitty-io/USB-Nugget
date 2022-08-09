@@ -100,6 +100,8 @@ void RubberNugget::init() {
     display.flipScreenVertically();
     display.setTextAlignment(TEXT_ALIGN_LEFT);
     display.setFont(DejaVu_Sans_Mono_10);
+    display.clear();
+    display.display();
 
     keyboard.setBaseEP(3);
     keyboard.begin();
