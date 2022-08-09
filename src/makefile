@@ -34,3 +34,15 @@ generate_img: check_port build
 
 check_port:
 	@ls $(PORT) || { echo "Device not found at $(PORT). Run with 'make flash PORT=<port>'" && exit 1; }
+
+# export_binary:
+# 	docker create --name $(CONTAINER_NAME) --device=$(PORT) -t rubber-nugget:latest
+# 	docker start $(CONTAINER_NAME)
+# 	docker exec $(CONTAINER_NAME) bash -c \
+# 	'./arduino-cli compile -b esp32:esp32:esp32s2 --output-dir / --build-property build.partitions=noota_3gffat --build-property build.cdc_on_boot=1 RubberNugget/  \
+# 	&& ls /'
+
+# 	docker cp $(CONTAINER_NAME):/RubberNugget.ino.bin /tmp/meow.bin
+# 	docker rm --force $(CONTAINER_NAME)
+
+
