@@ -2,8 +2,6 @@
 #define dn_btn 18 // right button
 #define lt_btn 11 // left button
 #define rt_btn 7 // right button
-
-#define MAX_FILE_SELECTIONS 4
     
 #include "RubberNugget.h"
 #include "Arduino.h"
@@ -33,6 +31,12 @@ FlashUSB fat1;
 
 char *l1 = "ffat";
 String payloadPath = "";
+
+// FatFS variables
+FRESULT res;
+FF_DIR dir;
+UINT i;
+static FILINFO fno;
 
 /*-----------------------------------------------------------------*/
 
@@ -91,6 +95,7 @@ Nugget_Interface payloadRun;
 RubberNugget::RubberNugget() {
   
 }
+const char* osList[] = {"Linux", "Mac", "Windows", "Starred"};
 
 void RubberNugget::init() {
     
@@ -122,6 +127,14 @@ void RubberNugget::init() {
 
     CDCUSBSerial.setCallbacks(new MyCDCCallbacks());
     EspTinyUSB::registerDeviceCallbacks(new Device());
+
+    // create default folders if they don't exist
+    for (int i=0; i<4; i++) {
+      res = f_stat(osList[i], &fno);
+      if (res!= FR_OK) {
+        f_mkdir(osList[i]);
+      }
+    }    
 }
 
 bool keyKnown(String keyPress) {
@@ -292,7 +305,7 @@ void rPayload (String payloadRaw) {
     strip.show(); strip.show();
 }
 
-void rPayload (const char* path, uint8_t from) {
+void rPayload (char* path, uint8_t from) {
     
     FRESULT fr;            
     FIL file; 
@@ -352,226 +365,152 @@ void rPayload (const char* path, uint8_t from) {
     
 
 }
+// 0=files 1=folders
+String* contents2 = new String[30];
 
-// newFileList returns a paginated list of strings representing the files
-// available at the given path. resultsPerPage will be set to number of results
-// returned. On error, it returns nullptr and numFiles is set to -1.
-FILINFO* newFileList(const char* path, int& numFiles) {
-  uint currentCapacity = 4; // arbitrary, will grow as needed
-  uint filesSoFar = 0;
-  bool errored = false;
-  FILINFO* fileList = new FILINFO[currentCapacity];
+String* getFileList(char* path, uint8_t filetype) {
 
-  FRESULT res;
-  FF_DIR dir;
-  FILINFO fno;
+    for (int i=0; i<30; i++) {
+      contents2[i] = "";
+    }
+    uint8_t filecount = 0;
+     // up to 30 files / folders i guess
+
+    res = f_opendir(&dir, path);                       /* Open the directory */
+    
+    if (res == FR_OK) {
+        for (;;) {
+            res = f_readdir(&dir, &fno);                   /* Read a directory item */
+            if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
+            
+            if (fno.fattrib & AM_DIR and filetype==0) {                    /* It is a directory */
+                if (res != FR_OK) break;
+                contents2[filecount] = fno.fname;
+                filecount++;
+            } else if (!(fno.fattrib & AM_DIR) and filetype==1) {
+                contents2[filecount] = fno.fname;
+                filecount++;
+            }
+        }
+        f_closedir(&dir);
+    }
+    return contents2;
+}
+
+
+
+String* contents = new String[4];
+uint8_t depth = 0;
+
+// returns list of directories or files
+String* listDirs(char* path) {
+  contents[0] = "";
+  contents[1] = "";
+  contents[2] = "";
+  contents[3] = "";
+  
+  uint8_t count = 0;
 
   res = f_opendir(&dir, path);
-  if (res != FR_OK) {
-    Serial.printf("[newFileList] f_opendir error: %d\n", res);
-    goto onError;
-  }
-
-  for (;;) {
-      res = f_readdir(&dir, &fno); // Read a directory item
-      if (res != FR_OK) {
-        errored = true;
-        break;
-      }
-      if (fno.fname[0] == 0) { // End of dir
-        break;
-      }
-      if (fno.fname[0] == '.') { // Don't show files starting with '.'
-        continue;
-      }
-      // Found a file/dir. Store it, doubling capacity first if needed. 
-      if (filesSoFar >= currentCapacity) {
-        FILINFO* newFileList = new FILINFO[currentCapacity*2];
-        for (int i = 0; i < currentCapacity; i++){
-          newFileList[i] = fileList[i];
+  if (res == FR_OK) {
+        for (;;) {
+            res = f_readdir(&dir, &fno);                   /* Read a directory item */
+            if (res != FR_OK || fno.fname[0] == 0 || count>3) break;  /* Break on error or end of dir */
+            if (fno.fattrib & AM_DIR and depth<=2) {
+                if (res != FR_OK) break;
+                contents[count] = (String) fno.fname;
+                count++;
+                Serial.println(fno.fname);
+                Serial.println(count);
+            } 
+            else if (!(fno.fattrib & AM_DIR) and depth==3) {                                       /* It is a file. */
+                contents[count] = (String) fno.fname;
+                count++;
+            }
         }
-        currentCapacity *= 2;
-        delete[] fileList;
-        fileList = newFileList;
+        f_closedir(&dir);
+    }
+
+    // fill with blank
+    if (count<3) {
+      for (int i=count; i<(4-count); i++) {
+        contents[i] = "";
       }
-      fileList[filesSoFar] = fno;
-      filesSoFar++; 
-  }
-  if (errored) {
-    Serial.printf("[newFileList] f_readdir error: %d\n", res);
-    goto onError;
-  }
-  res = f_closedir(&dir);
-  if (res != FR_OK) {
-    Serial.printf("[newFileList] f_closedir error: %d\n", res);
-    goto onError;
-  }
-  numFiles = filesSoFar;
-  return fileList;
-
-onError:
-  numFiles = -1;
-  delete[] fileList;
-  return nullptr;
-}
-
-//     item0             <-- files; item0 extends "above" screen
-// ┌──────────────────┐
-// │   item1          │  <-- top=1
-// │   item2          │
-// │ > item3          │  <-- cursor=3; third item, not third from top
-// │   item4          │  <-- numFiles=5
-// ├──────────────────┤
-// │/path/items       │  <-- footer
-// └──────────────────┘
-bool displayFiles(FILINFO* files, String* currentPath, int numFiles, int selected, int top) {
-  if (!files || selected >= numFiles || (top > 0 && numFiles < MAX_FILE_SELECTIONS)) {
-    Serial.printf("[displayFiles] condition error: (files:%p)(numFiles:%d)(selected:%d)(top:%d)\n");
-    return false;
-  }
-  ::display.clear();
-
-  // loop condition: display only MAX_FILE_SELECTIONS at a time, and not more
-  // than files we actually have.
-  for (int i = top; i < top+MAX_FILE_SELECTIONS && i < numFiles; i++) {
-    String fileName(files[i].fname);
-    if (fileName.length() > 12) {
-      fileName = fileName.substring(0, 9) + "...";
     }
-    ::display.drawString(6, 10*(i-top), fileName);
-  }
-  // Cursor
-  ::display.drawRect(2,10*(selected-top)+6,2,2);
 
-  // Footer
-  ::display.drawLine(0, 54, 127, 54);
-  ::display.drawLine(0, 53, 127, 53);
-  ::display.drawString(0,54,"dir:");
-  if(currentPath->length() > 17) {
-    ::display.drawString(25, 54, currentPath->substring(0,14)+"...");
-  } else {
-    ::display.drawString(25, 54, *currentPath);
-  }
-  // Cat image
-  ::display.drawXbm(0, 0, 128, 64, RubberNugget_bits);
-
-  // Write to screen
-  ::display.display();
-  return true;
-}
-
-typedef enum {
-	BUTTON_UP = 0,
-	BUTTON_DOWN,
-	BUTTON_LEFT,
-	BUTTON_RIGHT,
-	BUTTON_NONE,
-} NUGGET_BUTTON;
-
-// https://hackaday.com/2015/12/10/embed-with-elliot-debounce-your-noisy-buttons-part-ii/
-NUGGET_BUTTON getPress() {
-  const int NUM_BUTTONS = 4;
-  static uint8_t buttonHistory[NUM_BUTTONS] = {0};
-  static uint8_t buttonPins[NUM_BUTTONS];
-  buttonPins[BUTTON_UP] = up_btn;
-  buttonPins[BUTTON_DOWN] = dn_btn;
-  buttonPins[BUTTON_LEFT] = lt_btn;
-  buttonPins[BUTTON_RIGHT] = rt_btn;
-
-  for (int i = 0; i < NUM_BUTTONS; i++){
-    uint8_t pressed = 0;
-    buttonHistory[i] = buttonHistory[i] << 1;
-    buttonHistory[i] |= digitalRead(buttonPins[i]);
-    if ((buttonHistory[i] | 0b00111000) == 0b11111000){
-      buttonHistory[i] = 0b00000000;
-      return (NUGGET_BUTTON)i;
+    // fix to use internal path
+    if (!payloadPath.equals("/")) {
+      contents[3] = "BACK";
     }
-  }
-  return BUTTON_NONE;
+    
+  return contents;
 }
 
 // continue looping until user selects payloads
-void RubberNugget::selectPayload() {
-  String currentPath("/");
-  int numFiles = 0;
-  int fileListSelected = 0;
-  int fileListTop = 0;
+void RubberNugget::selectPayload(char* cpath) {
+    // forwards navigation   
+    if (strcmp(cpath,"BACK") != 0) {
+      
+      payloadPath+= cpath;
+      
+      depth++;
+      if (payloadPath.indexOf(".txt") !=-1 ) {
+        
+        char char_array[payloadPath.length()+1];
+        payloadPath.toCharArray(char_array, payloadPath.length()+1);
 
-  FILINFO* files = newFileList(currentPath.c_str(), numFiles);
-  if (!files) {
-    //TODO:display error
-    return;
-  }
-  bool ok = displayFiles(files, &currentPath, numFiles, fileListSelected, fileListTop);
-  if (!ok) {
-    Serial.println("[selectPayload][1] display files error");
-  }
-
-  while (true) {
-    NUGGET_BUTTON press = getPress();
-    if (press==BUTTON_NONE) {
-      delay(2);
-      continue;
+        runPayload(char_array,0); // calls runPayload with name of path
+        payloadPath="";
+        ::display.clear();
+        Serial.println("finished running payload");
+        depth=1;
+      }
+      
+      if (payloadPath!="/") {
+        payloadPath+= "/";
+      }
+      
     }
 
-    if (press==BUTTON_UP) { // up
-      if (fileListSelected != 0) {
-        fileListSelected--;
-      }
-      if (fileListSelected < fileListTop) {
-        fileListTop--;
-      }
-    } else if (press==BUTTON_DOWN) { // down
-      if (fileListSelected < numFiles-1) {
-        fileListSelected++;
-      }
-      if (fileListSelected-fileListTop > MAX_FILE_SELECTIONS-1){
-        fileListTop++;
-      }
-    } else if (press==BUTTON_LEFT) { // left
-        int lastSlash = currentPath.lastIndexOf("/");
-        if (lastSlash == 0) {
-          currentPath = "/";
-        } else {
-          currentPath = currentPath.substring(0, lastSlash);
-        }
-        delete []files;
-        files = newFileList(currentPath.c_str(), numFiles);
-        fileListSelected = 0;
-        fileListTop = 0;
-    } else if (press==BUTTON_RIGHT) { // right
-      if(files[fileListSelected].fattrib & AM_DIR){ // directory; enter it
-        if (currentPath.length()!=1){
-          currentPath += "/";
-        }
-        currentPath += files[fileListSelected].fname;
-        delete[] files;
-        files = newFileList(currentPath.c_str(), numFiles);
-        fileListSelected = 0;
-        fileListTop = 0;
-      } else { // file; assume it's a payload and run it
-        String payload = currentPath;
-        if (payload.length()!=1){
-          payload += "/";
-        }
-        payload += files[fileListSelected].fname;
-        runPayload(payload.c_str(), 0);
-      }
-    } else { // none / unknown btn
-      continue;
+    // backwards navigation
+    else if (strcmp(cpath,"BACK") == 0) {
+      depth--;
+      payloadPath = payloadPath.substring(0,payloadPath.length()-1); // drop last character
+      payloadPath = payloadPath.substring(0,payloadPath.lastIndexOf("/")+1); // drop last path  
     }
 
-    ok = displayFiles(files, &currentPath, numFiles, fileListSelected, fileListTop);
-    if (!ok) {
-      Serial.println("[selectPayload][2] display files error");
-    }
 
-  }
-  // unreachable, but just in case something changes
-  delete[] files;
+    char char_array[100];
+    payloadPath.toCharArray(char_array, payloadPath.length());    
+
+    // pass key map to library 
+
+    payloadSelector.addKeyMap(listDirs(char_array));
+    
+    if (payloadPath.length() > 17) {
+      payloadSelector.addFooter(payloadPath.substring(0,14)+"...");
+    }
+    else {
+      payloadSelector.addFooter(payloadPath);
+    }    
+    ::display.drawXbm(0, 0, 128, 64, RubberNugget_bits);
+    ::display.display();
+  
+  
+//    payloadSelector.autoUpdateDisplay();
+//    while (CDCUSBSerial.available()) {
+//      echo_all(CDCUSBSerial.read());
+//    }
+//    
+//    while (Serial.available()) {
+//      echo_all(Serial.read());
+//    }
+    Serial.println("reached end of selector");
+    delay(0);
+    Serial.println(depth);
 }
 
-void RubberNugget::runPayload(const char* path, uint8_t from) {  
+void RubberNugget::runPayload(char* path, uint8_t from) {  
   // i have no clue why this works
   for (int i=253; i<255; i++) {
     strip.setPixelColor(0, strip.Color(i,0, 0)); 
@@ -592,41 +531,37 @@ void RubberNugget::runLivePayload(String payloadRaw) {
   ::rPayload(payloadRaw); 
 }
 
-// allPayloadPaths returns a comma seperated list of paths to all payloads.
-String* RubberNugget::allPayloadPaths(const char* path) {
-  int numFiles = 0;
-  FILINFO* files = newFileList(path, numFiles);
+String RubberNugget::getPayloads() {
+  
+  Serial.println(ESP.getFreeHeap());
+  char * payloadOsTypes[] = {"/Linux","/Mac","/Windows","/Starred"};
+  String pathJson = "[";
+  bool firstPass;
+  char tab2[100];
+  String meow;
+  
+  Serial.println(ESP.getFreeHeap());
 
-  // DFS on fs
-  // TODO: measure max stack usage; if cutting it close reimplement
-  // non-recursively.
-  if (numFiles < 1) {
-    return nullptr;
-  }
-  String* ret = new String;
-  for(int i = 0; i < numFiles; i++) {
-    if (files[i].fattrib & AM_DIR) { // Directory; recurse
-      String recursivePath(path);
-      if (recursivePath.length()>1){ // non-root
-        recursivePath += "/";
-      }
-      recursivePath += files[i].fname;
-      String* subDirFiles = allPayloadPaths(recursivePath.c_str());
-      if (subDirFiles) {
-        (*ret) += (*subDirFiles);
-        delete subDirFiles;
-      }
-    } else { // file, append to list
-      // TODO: escape commas in file names 
-      String pathString(path);
-      if (pathString.length() > 1) { // non-root
-        pathString += "/";
-      }
-      (*ret) += pathString;
-      (*ret) += files[i].fname;
-      (*ret) += ",";
+  for (int i =0; i<4; i++) {
+     for (int j=0; j<30; j++){
+
+        // list subdirs in OS
+        if (getFileList(payloadOsTypes[i], 0)[j] == "") break;
+//        char tab2[100];
+       meow = (String) payloadOsTypes[i] + "/" + getFileList(payloadOsTypes[i], 0)[j]; // path
+        strcpy(tab2, meow.c_str());
+         
+        for (int k=0; k<30; k++) {          
+          if (getFileList(tab2, 1)[k] == "") {break;}
+                   
+          pathJson+="{\"pName\":\""+getFileList(tab2, 1)[k]+"\",\"pCategory\":\""+(String) getFileList(payloadOsTypes[i], 0)[j]+"\",\"pOS\":\""+(String) osList[i]+"\"},";
+        }
     }
   }
-  delete[] files;
-  return ret;
+  
+  Serial.println(ESP.getFreeHeap());
+  pathJson = pathJson.substring(0,pathJson.length()-1);
+  pathJson+="]";  
+  Serial.println(ESP.getFreeHeap());
+  return pathJson; 
 }

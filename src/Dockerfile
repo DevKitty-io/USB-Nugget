@@ -5,7 +5,6 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     wget \
     zip \
-    bsdmainutils \
     xz-utils \
     python3 python3-pip
 RUN pip3 install pyserial esptool
@@ -30,9 +29,7 @@ RUN ./third_party/arduino_cli_install.sh $(readlink -f ./arduino-cli)
 RUN sed -i '/.*args = parser.parse_args(argv)/a\ \ \ \ args.after="no_reset"' /root/.arduino15/packages/esp32/tools/esptool_py/3.3.0/esptool.py
 
 COPY RubberNugget ./RubberNugget
-COPY fatfs/default.img .
-COPY scripts ./scripts
-RUN ./scripts/build_web_ui.sh
+COPY scripts.img .
 RUN ./arduino-cli compile -b esp32:esp32:esp32s2 RubberNugget \
     --build-property build.partitions=noota_3gffat \
     --build-property build.cdc_on_boot=1
