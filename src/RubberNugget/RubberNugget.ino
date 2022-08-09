@@ -28,7 +28,7 @@ bool webstuffhappening = false;
 
 extern Nugget_Interface payloadSelector;
 
-Adafruit_NeoPixel strip {1, 12, NEO_GRB + NEO_KHZ400 };
+Adafruit_NeoPixel strip (1, 12, NEO_RGB + NEO_KHZ800);
 
 const char *ssid = "Nugget AP";
 const char *password = "nugget123";
@@ -186,7 +186,9 @@ void webserverInit(void *p) {
 }
 
 void setup() {
-  pinMode(12, OUTPUT); delay(500);
+  pinMode(12, OUTPUT); 
+  strip.begin(); 
+  delay(500);
   Serial.begin(115200);
 
   WiFi.softAP(ssid, password);
@@ -204,9 +206,15 @@ void setup() {
 
   server.begin();
 
-  strip.begin(); strip.clear(); strip.show();
-  strip.setPixelColor(0, strip.Color(0, 0, 0)); strip.show();
-  strip.setBrightness(100);
+  
+  // delay(400);
+
+  strip.clear(); 
+  strip.setPixelColor(0, strip.Color(0, 0, 0)); 
+  strip.show();
+  strip.show();
+
+  // strip.setBrightness(100);
 
   // initialize & launch payload selector
   RubberNugget::init();
