@@ -93,15 +93,15 @@ RubberNugget::RubberNugget() {
 }
 
 void RubberNugget::init() {
-    
-    
-    
+
     display.init();
     display.flipScreenVertically();
     display.setTextAlignment(TEXT_ALIGN_LEFT);
     display.setFont(DejaVu_Sans_Mono_10);
     display.clear();
     display.display();
+
+    setDefaults();
 
     keyboard.setBaseEP(3);
     keyboard.begin();
@@ -137,6 +137,45 @@ bool keyKnown(String keyPress) {
     }
   }
   return false;
+}
+
+void RubberNugget::setDefaults() {
+  FRESULT fr;            
+  FIL file; 
+  uint16_t size;
+  UINT bytesRead;
+  
+  // read configuration file
+  fr = f_open(&file, "usbnugget.conf", FA_READ);
+
+      if (fr == FR_OK) {
+        size = f_size(&file);
+        char * data = NULL;
+
+        data = (char*) malloc(size);
+        Serial.printf("File size: %d bytes", size);
+
+        fr = f_read(&file, data, (UINT) size, &bytesRead);
+        if (fr == FR_OK){
+            Serial.println("Config successfully read!");
+            String command;
+            
+            for (int i=0; i < bytesRead; i++) {
+                if (data[i] == 0x0a) {
+            //       Serial.println(command);
+                
+            //       processDuckyScript(command);
+            //       command = "";
+                }
+                command+=data[i];
+            }
+            // processDuckyScript(command);
+        }
+        free(data); // free allocated memory when you don't need it
+
+        f_close(&file);
+    }
+
 }
 
 void pressNamedKey(String keyPress, uint8_t modifiers) {
