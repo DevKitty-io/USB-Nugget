@@ -28,7 +28,7 @@ bool webstuffhappening = false;
 
 extern Nugget_Interface payloadSelector;
 
-Adafruit_NeoPixel strip (1, 12, NEO_RGB + NEO_KHZ800);
+Adafruit_NeoPixel strip(1, 12, NEO_RGB + NEO_KHZ800);
 
 const char *ssid = "Nugget AP";
 const char *password = "nugget123";
@@ -45,7 +45,6 @@ void getPayloads() {
 }
 
 void handleRoot() {
-//  Serial.println(ESP.getFreeHeap());
   Serial.println("handling root!");
   server.send(200, "text/html", String(INDEX));
 }
@@ -185,13 +184,31 @@ void webserverInit(void *p) {
   }
 }
 
+extern String netPassword;
+extern String networkName;
+
 void setup() {
   pinMode(12, OUTPUT); 
   strip.begin(); 
   delay(500);
+
   Serial.begin(115200);
 
+  RubberNugget::init();
+ 
+  if (networkName.length() >0) {
+    Serial.println(networkName);
+    const char * c = networkName.c_str();
+    ssid=c;
+  }
+  if (netPassword.length() >=8) {
+    Serial.println(netPassword);
+    const char * d = netPassword.c_str();
+    password=d;
+  }
+
   WiFi.softAP(ssid, password);
+  // } 
   IPAddress myIP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(myIP);
@@ -206,22 +223,15 @@ void setup() {
 
   server.begin();
 
-  
-  // delay(400);
-
   strip.clear(); 
   strip.setPixelColor(0, strip.Color(0, 0, 0)); 
   strip.show();
   strip.show();
 
-  // strip.setBrightness(100);
-
   // initialize & launch payload selector
-  RubberNugget::init();
+  
   xTaskCreate(webserverInit, "webapptask", 12 * 1024, NULL, 5, &webapp); // create task priority 1
   RubberNugget::selectPayload();
 }
 
-void loop() {
-  return;
-}
+void loop() { return; }

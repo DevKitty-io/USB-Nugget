@@ -87,6 +87,11 @@ void echo_all(char c) {
 
 Nugget_Interface payloadSelector;
 Nugget_Interface payloadRun;
+
+String networkName;
+String netPassword;
+// char* netname;
+// char* netpass;
   
 RubberNugget::RubberNugget() {
   
@@ -101,11 +106,7 @@ void RubberNugget::init() {
     display.clear();
     display.display();
 
-    setDefaults();
-
-    keyboard.setBaseEP(3);
-    keyboard.begin();
-    keyboard.setCallbacks(new MyHIDCallbacks());
+    
 
   // mount FAT fs
   if (fat1.init("/fat1", "ffat")) {
@@ -124,6 +125,82 @@ void RubberNugget::init() {
 
     CDCUSBSerial.setCallbacks(new MyCDCCallbacks());
     EspTinyUSB::registerDeviceCallbacks(new Device());
+
+    /******/
+    FRESULT fr;            
+  FIL file; 
+  uint16_t size;
+  UINT bytesRead;
+  long vid; long pid;
+  // read configuration file
+  fr = f_open(&file, "usbnugget.conf", FA_READ);
+
+      if (fr == FR_OK) {
+        size = f_size(&file);
+        char * data = NULL;
+
+        data = (char*) malloc(size);
+        Serial.printf("File size: %d bytes", size);
+
+        fr = f_read(&file, data, (UINT) size, &bytesRead);
+        if (fr == FR_OK){
+            Serial.println("Config successfully read!");
+            String currentLine;
+            bool pidEn = false;
+            
+            for (int i=0; i < bytesRead; i++) {
+                if (data[i] == 0x0a) {
+
+                  if(currentLine.indexOf("vid") >= 0) {
+                    // strip string after colon delimiter and convert to hex
+                    String vidString = currentLine.substring(currentLine.indexOf(":")+1,currentLine.length());
+                    char tab2[vidString.length() + 1];
+                    strcpy(tab2, vidString.c_str());
+                    
+                    char* ptr;
+                    
+                    vid = strtoul(tab2, &ptr, 16);
+                    pidEn = true;
+                  }
+                  
+                  if (currentLine.indexOf("pid") >= 0 && pidEn) {
+                    // display.clear();
+
+                    String pidString = currentLine.substring(currentLine.indexOf(":")+1,currentLine.length());
+                    char tab2[pidString.length() + 1];
+                    strcpy(tab2, pidString.c_str());
+                    
+                    char* ptr;
+                    
+                    pid = strtoul(tab2, &ptr, 16);
+                  }
+
+                  if (currentLine.indexOf("network") >=0) {
+                    networkName = currentLine.substring(currentLine.indexOf(":")+1,currentLine.length());
+                    // networkName.trim();
+                  }
+                  
+                  if (currentLine.indexOf("password") >=0) {
+                    netPassword = currentLine.substring(currentLine.indexOf(":")+1,currentLine.length());
+                    // netPassword.trim();
+                  }
+
+                  currentLine = "";
+                }
+
+
+                currentLine+=data[i];
+            }
+        }
+        free(data); // free allocated memory when you don't need it
+
+        f_close(&file);
+    }
+
+    keyboard.deviceID(vid,pid);
+    keyboard.setBaseEP(3);
+    keyboard.begin();
+    keyboard.setCallbacks(new MyHIDCallbacks());
 }
 
 bool keyKnown(String keyPress) {
@@ -140,42 +217,7 @@ bool keyKnown(String keyPress) {
 }
 
 void RubberNugget::setDefaults() {
-  FRESULT fr;            
-  FIL file; 
-  uint16_t size;
-  UINT bytesRead;
   
-  // read configuration file
-  fr = f_open(&file, "usbnugget.conf", FA_READ);
-
-      if (fr == FR_OK) {
-        size = f_size(&file);
-        char * data = NULL;
-
-        data = (char*) malloc(size);
-        Serial.printf("File size: %d bytes", size);
-
-        fr = f_read(&file, data, (UINT) size, &bytesRead);
-        if (fr == FR_OK){
-            Serial.println("Config successfully read!");
-            String command;
-            
-            for (int i=0; i < bytesRead; i++) {
-                if (data[i] == 0x0a) {
-            //       Serial.println(command);
-                
-            //       processDuckyScript(command);
-            //       command = "";
-                }
-                command+=data[i];
-            }
-            // processDuckyScript(command);
-        }
-        free(data); // free allocated memory when you don't need it
-
-        f_close(&file);
-    }
-
 }
 
 void pressNamedKey(String keyPress, uint8_t modifiers) {

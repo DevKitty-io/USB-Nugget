@@ -29,20 +29,8 @@ generate_img: check_port build
 		./arduino-cli upload -b esp32:esp32:esp32s2 --port $(PORT) RubberNugget/ && sleep 2 && \
 		python3 -m esptool --after no_reset write_flash 0x110000 default.img && sleep 2 && \
 		python3 -m esptool --after no_reset read_flash 0x0 0x400000 /rubber_nugget.bin'
-	docker cp $(CONTAINER_NAME):/rubber_nugget.bin .
+	docker cp $(CONTAINER_NAME):/rubber_nugget.bin /tmp/meow.bin
 	docker rm --force $(CONTAINER_NAME)
 
 check_port:
 	@ls $(PORT) || { echo "Device not found at $(PORT). Run with 'make flash PORT=<port>'" && exit 1; }
-
-# export_binary:
-# 	docker create --name $(CONTAINER_NAME) --device=$(PORT) -t rubber-nugget:latest
-# 	docker start $(CONTAINER_NAME)
-# 	docker exec $(CONTAINER_NAME) bash -c \
-# 	'./arduino-cli compile -b esp32:esp32:esp32s2 --output-dir / --build-property build.partitions=noota_3gffat --build-property build.cdc_on_boot=1 RubberNugget/  \
-# 	&& ls /'
-
-# 	docker cp $(CONTAINER_NAME):/RubberNugget.ino.bin /tmp/meow.bin
-# 	docker rm --force $(CONTAINER_NAME)
-
-
