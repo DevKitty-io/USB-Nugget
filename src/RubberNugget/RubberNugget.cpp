@@ -489,6 +489,10 @@ FILINFO* newFileList(const char* path, int& numFiles) {
     Serial.printf("[newFileList] f_closedir error: %d\n", res);
     goto onError;
   }
+  if (filesSoFar < 1){
+    Serial.println("[newFileList] directory empty");
+    goto onError;
+  }
   numFiles = filesSoFar;
   return fileList;
 
@@ -624,14 +628,21 @@ void RubberNugget::selectPayload() {
         fileListTop = 0;
     } else if (press==BUTTON_RIGHT) { // right
       if(files[fileListSelected].fattrib & AM_DIR){ // directory; enter it
-        if (currentPath.length()!=1){
-          currentPath += "/";
+        String nextPath(currentPath);
+        if (nextPath.length()!=1){
+          nextPath += "/";
         }
-        currentPath += files[fileListSelected].fname;
-        delete[] files;
-        files = newFileList(currentPath.c_str(), numFiles);
-        fileListSelected = 0;
-        fileListTop = 0;
+        nextPath += files[fileListSelected].fname;
+        int dirFiles = 0;
+        FILINFO* newFiles = newFileList(nextPath.c_str(), dirFiles);
+        if (newFiles != nullptr) {
+          delete[] files;
+          files = newFiles;
+          numFiles = dirFiles;
+          currentPath = nextPath;
+          fileListSelected = 0;
+          fileListTop = 0;
+        }
       } else { // file; assume it's a payload and run it
         String payload = currentPath;
         if (payload.length()!=1){
