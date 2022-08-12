@@ -297,7 +297,8 @@ void processDuckyScript(String ducky) {
     display.drawXbm(0, 0, 128, 64, medium_signal_bits);
     payloadRun.updateDisplay();
     Serial.println("String");
-    keyboard.sendString(String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())));    
+    String tmpString = String(ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
+    keyboard.sendString(tmpString);    
   }  
   
   else if (keyKnown(tCommand)) {
@@ -533,7 +534,7 @@ bool displayFiles(FILINFO* files, String* currentPath, int numFiles, int selecte
   // Footer
   ::display.drawLine(0, 54, 127, 54);
   ::display.drawLine(0, 53, 127, 53);
-  ::display.drawString(0,54,"dir:");
+  ::display.drawString(0,54,"Dir:");
   if(currentPath->length() > 17) {
     ::display.drawString(25, 54, currentPath->substring(0,14)+"...");
   } else {
@@ -541,6 +542,8 @@ bool displayFiles(FILINFO* files, String* currentPath, int numFiles, int selecte
   }
   // Cat image
   ::display.drawXbm(0, 0, 128, 64, RubberNugget_bits);
+  ::display.drawString(100,0,"v1.1");
+  ::display.drawRect(98,0,30,12);
 
   // Write to screen
   ::display.display();
