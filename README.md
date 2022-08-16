@@ -1,13 +1,16 @@
-# RubberNugget: USB Attack Platform
-A versatile USB attack platform that lets you hack computers in seconds using a [WiFi Nugget](https://wifinugget.com)!  
+# **USB Nugget**: Cat-Themed USB Attacks
+A versatile USB attack platform that lets you hack computers in seconds using a [USB Nugget](https://usbnugget.com)!  
 
 <img src="images/RubberNugget-Features.png"  />
 
-## To install the new RubberNugget:
-1.	Download the .BIN file here: [(direct link)](https://github.com/HakCat-Tech/RubberNugget/releases/) or from the release page: https://github.com/HakCat-Tech/RubberNugget/releases/
-2.	Take your S2 Nugget out of its case
-3.	Press and hold the "0" button on the back of your Nugget, plug it in to your computer, then release the "0" button. Your Nugget is now in flashing mode.
-4.	Open the following URL in Google Chrome (other browsers not currently supported: https://nabucasa.github.io/esp-web-flasher/
+## Resources:
+- [USB Nugget Payloads](https://github.com/HakCat-Tech/USB-Nugget-Payloads)  
+- [Hak5 Payloads](https://docs.hak5.org)
+
+## How to Update your Nugget:
+1.	[Download the latest binary file here](https://github.com/HakCat-Tech/USB-Nugget/releases/)
+2.	Place your Nugget in [Device Firmware Upgrade (DFU) mode]().
+4.	Open our [web flasher tool](https://hakcat-tech.github.io/esp-web-flasher/) in Google Chrome (other browsers not currently supported)
 5.	Click on "Connect" and then select the "ESP32-S2" board. Click "Erase" and "OK" to continue.
 6.	Once you see "Finished", click "Choose a file" and select the .BIN file you downloaded in step 1. Click "Program" to flash your S2 Nugget!
 7.	When its done, unplug your S2 Nugget and plug it in again to see the new features. 
@@ -15,10 +18,23 @@ A versatile USB attack platform that lets you hack computers in seconds using a 
 ## Creating Payloads
 To upload a payload, you can save a `.txt` file to the RubberNugget flash drive.  Payloads must be saved under an operating system, then category type. (OS->Category->Payload.txt)
 
+## Updating AP Credentials & Keyboard ID
+To edit your USB Nugget's default AP name & password, edit or create the `usbnugget.conf` file on your NUGGET drive, and add the following 2 lines:
+```
+network: network_name_here
+password: password_here
+```
+To change the VID and PID of the keyboard, you can just add:
+```
+vid:0x6969
+pid:0x6969
+```
+
+
 ## Accessing the Web Interface
 To access the web interface, connect to the `RubberNugget` AP with the password `nugget123`.  In a web browser, navigate to `192.168.4.1` to access the payload deployment system.  At the moment, the web interface can only edit / run payloads.
 
-## Current Features - v1.0.x (beta)
+## Current Features - v1.1 (beta)
 
 - DuckyScript Compatible
     - Basic syntax: `STRING`, `DELAY`, keypress combos
@@ -33,7 +49,6 @@ To access the web interface, connect to the `RubberNugget` AP with the password 
 - Nugget Interface
     - Custom graphics
     - Live command preview
-    - Deploy payloads in 3 clicks
     - Reactive RGB NeoPixel
 
 ## Building / flashing from source
@@ -49,7 +64,7 @@ cd RubberNugget/src
 # Build
 sudo make build
 
-# Build and flash the esp8266-s2 (may need sudo)
+# Build and flash the ESP32-S2 (may need sudo)
 sudo make flash
 #optionally specify port: sudo make flash PORT=<port>
 #optionally install default scripts: sudo make flash RESET_SCRIPTS_DURING_FLASH=true
