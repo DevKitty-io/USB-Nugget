@@ -19,7 +19,7 @@ A versatile USB attack platform that lets you hack computers in seconds using a 
 To upload a payload, you can save a `.txt` file to the RubberNugget flash drive.  Payloads must be saved under an operating system, then category type. (OS->Category->Payload.txt)
 
 ## Updating AP Credentials & Keyboard ID
-To edit your USB Nugget's default AP name & password, edit or create the `usbnugget.conf` file on your NUGGET drive, and add the following 2 lines:
+To edit your USB Nugget's default AP name & password, edit or create the `.usbnugget.conf` file on your NUGGET drive, and add the following 2 lines:
 ```
 network: network_name_here
 password: password_here
