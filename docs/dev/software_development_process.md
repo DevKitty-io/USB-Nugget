@@ -1,4 +1,4 @@
-# USBNugget software development process
+# USB Nugget software development process
 
 ## 1. Work planning and task creation
 
@@ -51,7 +51,8 @@ Implementing larger features may require updates to documentation.
 Documentation should be updated alongside implementation of these features in
 the same commit or PR.
 - Product-specific documentation in the README file in the project directory root.
-- Developer-specific documentation belongs in `/src/docs`. It should be written in markdown.
+- Developer-specific documentation belongs in `/docs/dev`. It should be written
+  in markdown.
 
 ### Write comments as needed
 See [best practices for writing code comments](https://stackoverflow.blog/2021/12/23/best-practices-for-writing-code-comments/)
