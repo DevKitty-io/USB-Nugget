@@ -1,7 +1,7 @@
 # **USB Nugget**: Cat-Themed USB Attacks
 A versatile USB attack platform that lets you hack computers in seconds using a [USB Nugget](https://usbnugget.com)!  
 
-<img src="images/RubberNugget-Features.png"  />
+<img src="images/USB-Nugget.png"  />
 
 ## Resources:
 - [USB Nugget Payloads](https://github.com/HakCat-Tech/USB-Nugget-Payloads)  
