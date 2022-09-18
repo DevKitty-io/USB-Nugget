@@ -1,4 +1,5 @@
 #pragma once
+#include "high_signal.xbm"
 #define high_signal_width 128
 #define high_signal_height 64
 static unsigned char high_signal_bits[] = {
