@@ -3,6 +3,8 @@
 #include "network_monitor_dash.xbm"
 #include "Window_Header.xbm"
 #include "Navbar_Outline.xbm"
+#include "Arrow_Right.xbm"
+#include "Arrow_Left.xbm"
 
 
 
@@ -10,19 +12,9 @@
    
 
 
-#define Arrow_Right_width 4
-#define Arrow_Right_height 7
-#define Arrow_Right_x_hot 122
-#define Arrow_Right_y_hot 56
-static unsigned char Arrow_Right_bits[] = {
-   0x01, 0x03, 0x07, 0x0f, 0x07, 0x03, 0x01 };
 
-#define Arrow_Left_width 4
-#define Arrow_Left_height 7
-#define Arrow_Left_x_hot 2
-#define Arrow_Left_y_hot 56
-static unsigned char Arrow_Left_bits[] = {
-   0x08, 0x0c, 0x0e, 0x0f, 0x0e, 0x0c, 0x08 };
+
+
 
 #define attack_width 128
 #define attack_height 64
