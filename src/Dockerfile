@@ -17,7 +17,7 @@ RUN tar -xf arduino-cli_${ARDUINO_CLI_VERSION}_Linux_64bit.tar.gz
 # TODO: version-lock these
 COPY arduino-cli.yaml .
 RUN ./arduino-cli core update-index --config-file arduino-cli.yaml
-RUN ./arduino-cli core install esp32:esp32
+RUN ./arduino-cli core install esp32:esp32@2.0.4
 RUN ./arduino-cli lib install \
     "ESP8266 and ESP32 OLED driver for SSD1306 displays" \
     "Adafruit NeoPixel"
