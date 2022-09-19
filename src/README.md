@@ -53,7 +53,7 @@ cd USB-Nugget/src
 make check-mac-deps
 
 # To build only, run
-make build
+make mac-build
 
 # Plug in your USB-Nugget dev kit in flashing mode by holding down the '0'
 # button while plugging it in.
