@@ -8,6 +8,9 @@
 #include <WiFiClient.h>
 #include <WebServer.h>
 
+#include <ESPmDNS.h>
+#include <DNSServer.h>
+
 #include "webUI/index.h"
 
 #include "src/utils.h"
@@ -24,82 +27,175 @@ WebServer server(80);
 TaskHandle_t webapp;
 TaskHandle_t nuggweb;
 
-void getPayloads() {
-  String* payloadPaths = RubberNugget::allPayloadPaths();
+void getPayloads()
+{
+  String *payloadPaths = RubberNugget::allPayloadPaths();
   Serial.printf("[SERVER][getPayloads] %s\n", payloadPaths->c_str());
   server.send(200, "text/plain", *payloadPaths);
 }
 
-void handleRoot() {
+void handleRoot()
+{
   Serial.println("handling root!");
   server.send(200, "text/html", String(INDEX));
 }
 
-void delpayload() {
+void delpayload()
+{
   String path(server.arg("path"));
   FRESULT res = f_unlink(path.c_str());
-  if (res == FR_OK){
+  if (res == FR_OK)
+  {
     server.send(200);
-  } else {
+  }
+  else
+  {
     server.send(500);
   }
 }
 
-void websave() {
-  fileOp decodeOp = base64Decode(server.arg("payloadText"));
-  if (!decodeOp.ok){
-    server.send(500, "text/plain", decodeOp.result);
+void websave()
+{
+  // path should be corrected, i.e. by index.html's pathCorrector function
+  // Each path should start with '/' and not end with '/'
+  String path = (server.arg("path"));
+  const char *constPath = path.c_str();
+
+  // construct directories as needed
+  FILINFO filinfo;
+  int pathSoFarIdx = 1;
+  while (true)
+  {
+    int nextDir = path.indexOf("/", pathSoFarIdx);
+    if (nextDir == -1)
+    {
+      break;
+    }
+    String pathSoFar = path.substring(0, nextDir);
+    if (FR_OK != f_stat(pathSoFar.c_str(), &filinfo))
+    {
+      if (f_mkdir(pathSoFar.c_str()) != FR_OK)
+      {
+        server.send(500, "text/plain", "Could not create directory");
+        return;
+      }
+    }
+    pathSoFarIdx = nextDir + 1;
+  }
+
+  // Create file
+  FIL file;
+  if (FR_OK != f_open(&file, constPath, FA_WRITE | FA_CREATE_ALWAYS))
+  {
+    server.send(500, "text/plain", "Could not open file for writing");
     return;
   }
-  fileOp saveOp = saveFile(server.arg("path"), decodeOp.result);
-  if (!saveOp.ok){
-    server.send(500, "text/plain", saveOp.result);
+
+  // Write to file
+  String content = (server.arg("payloadText"));
+  content.replace(" ", "/"); // why
+  const char *contentBase64 = content.c_str();
+  size_t payloadLength = BASE64::decodeLength(contentBase64);
+  uint8_t payloadContent[payloadLength];
+  BASE64::decode(contentBase64, payloadContent);
+  UINT written = 0;
+  if (FR_OK != f_write(&file, payloadContent, payloadLength, &written))
+  {
+    server.send(500, "text/plain", "Could not write to file");
+    f_close(&file);
     return;
   }
-  server.send(200, "text/plain", "payload saved successfully");
+  f_close(&file);
+  server.send(200, "text/plain", "Payload created successfully");
 }
 
-void webget() {
+// decode base64 and run
+void webrunlive()
+{
+  server.send(200, "text/plain", "Running payload...");
+  if (server.hasArg("plain"))
+  {
+    Serial.print("Decoding: ");
+    String decoded = (server.arg("plain"));
+    char tab2[decoded.length() + 1];
+    strcpy(tab2, decoded.c_str());
+
+    for (int i = 0; i < decoded.length(); i++)
+    {
+      Serial.print(tab2[i]);
+    }
+
+    Serial.println();
+    Serial.println(decoded.length());
+    Serial.println("-------");
+
+    uint8_t raw[BASE64::decodeLength(tab2)];
+    Serial.println(BASE64::decodeLength(tab2));
+    BASE64::decode(tab2, raw);
+
+    String meow = (char *)raw;
+    meow = meow.substring(0, (int)BASE64::decodeLength(tab2));
+    RubberNugget::runLivePayload(meow);
+    Serial.println();
+    Serial.println("-------");
+  }
+}
+
+void webget()
+{
+  FRESULT fr;
+  FIL file;
+  uint16_t size;
+  UINT bytesRead;
+
   String path = server.arg("path");
-  fileOp op = readFile(path);
-  if (!op.ok) {
-    // TODO: send 500/4XX depending on file existence vs internal error
-    server.send(500, "text/plain", String("error getting payload: ") + op.result);
+  fr = f_open(&file, path.c_str(), FA_READ);
+
+  if (fr != FR_OK)
+  {
+    // TODO: most likely file not found, but we need to check why fr != OK.
+    // Marking 500 until resolved
+    server.send(500, "plain/text", String("Error loading script"));
     return;
   }
-  String payload = base64::encode(op.result);
-  server.send(200, "text/plain", payload);
+
+  size = f_size(&file);
+  char *data = NULL;
+
+  data = (char *)malloc(size);
+
+  fr = f_read(&file, data, (UINT)size, &bytesRead);
+  if (fr == FR_OK)
+  {
+    String payload = String(data);
+    payload = payload.substring(0, bytesRead);
+    payload = base64::encode(payload);
+    server.send(200, "plain/text", payload);
+  }
+  else
+  {
+    server.send(500, "plain/text", String("Error reading script"));
+  }
+  f_close(&file);
 }
 
 NuggetInterface* nuggetInterface;
 
 // run payload with get request path
-void webrun() {
-  fileOp op = readFile(server.arg("path"));
-  if (op.ok) {
-    server.send(200, "text/html", "Running payload...");
-    NuggetScreen* runner = new ScriptRunnerScreen(op.result);
-    bool ok = nuggetInterface->injectScreen(runner);
-    return;
-  }
-  server.send(500, "text/html", "couldn't run payload: " + op.result);
+void webrun()
+{
+  server.send(200, "text/html", "Running payload...");
+  String path = server.arg("path");
+  RubberNugget::runPayload(path.c_str(), 1); // provide parameter triggered from webpage
 }
 
-void webrunlive() {
-  // TODO: use server.arg "content" or "payload" instead of "plain"
-  fileOp op = base64Decode(server.arg("plain"));
-  if (op.ok) {
-    server.send(200, "text/plain", "running live payload");
-    NuggetScreen* runner = new ScriptRunnerScreen(op.result);
-    bool ok = nuggetInterface->injectScreen(runner);
-    // TODO: send 503 when device is busy
-    return;
-  }
-  server.send(500, "text/html", "Device busy");
-}
+ DNSServer dns;
 
-void webserverInit(void *p) {
-  while (1) {
+void webserverInit(void *p)
+{
+  while (1)
+  {
+    dns.processNextRequest();
     server.handleClient();
     vTaskDelay(2);
   }
@@ -108,26 +204,43 @@ void webserverInit(void *p) {
 extern String netPassword;
 extern String networkName;
 
-void setup() {
+
+
+void setup()
+{
+  pinMode(12, OUTPUT);
+  strip.begin();
+  delay(500);
+
   Serial.begin(115200);
 
   RubberNugget::init();
- 
-  if (networkName.length() >0) {
+
+  if (networkName.length() > 0)
+  {
     Serial.println(networkName);
-    const char * c = networkName.c_str();
-    ssid=c;
+    const char *c = networkName.c_str();
+    ssid = c;
   }
-  if (netPassword.length() >=8) {
+  if (netPassword.length() >= 8)
+  {
     Serial.println(netPassword);
-    const char * d = netPassword.c_str();
-    password=d;
+    const char *d = netPassword.c_str();
+    password = d;
   }
 
   WiFi.softAP(ssid, password);
+  // }
   IPAddress myIP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(myIP);
+
+
+  dns.setErrorReplyCode(DNSReplyCode::NoError);
+  dns.start(53, "*", myIP);
+
+  MDNS.begin("usb.nugg");
+  Serial.println("mDNS responder started");
 
   server.on("/", handleRoot);
   server.on("/payloads", getPayloads);
@@ -138,6 +251,14 @@ void setup() {
   server.on("/runpayload", HTTP_GET, webrun);
 
   server.begin();
+
+  MDNS.addService("http", "tcp", 80);
+  strip.clear();
+  strip.setPixelColor(0, strip.Color(0, 0, 0));
+  strip.show();
+  strip.show();
+
+  // initialize & launch payload selector
 
   xTaskCreate(webserverInit, "webapptask", 12 * 1024, NULL, 5, &webapp); // create task priority 1
   nuggetInterface = new NuggetInterface;
