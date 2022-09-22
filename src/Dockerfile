@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     bsdmainutils \
     xz-utils \
+    xxd \
     python3 python3-pip
 RUN pip3 install pyserial esptool==4.2.1
 
