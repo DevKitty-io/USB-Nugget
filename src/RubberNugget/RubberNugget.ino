@@ -1,5 +1,5 @@
 #include <Adafruit_NeoPixel.h>
-#include "RubberNugget.h"
+#include "src/RubberNugget.h"
 #include "Arduino.h"
 #include <base64.h>
 #include "base64.hpp"

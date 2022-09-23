@@ -12,8 +12,8 @@
 #include "Nugget_Buttons.h"
 
 #include "SH1106Wire.h"
-#include "graphics.h"
-#include "keyboardlayout.h"
+#include "interface/graphics.h"
+#include "../keyboardlayout.h"
 
 SH1106Wire display(0x3C, 33, 35);
 

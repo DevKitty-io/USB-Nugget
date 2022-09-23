@@ -1,6 +1,6 @@
 #include "runner.h"
-#include "../../../RubberNugget.h"
-#include "../../../graphics.h"
+#include "../../RubberNugget.h"
+#include "../graphics.h"
 
 ScriptRunnerScreen::ScriptRunnerScreen(String path, unsigned long TTL) {
   this->has_run = false;
