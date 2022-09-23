@@ -376,7 +376,7 @@ void rPayload (String payloadRaw) {
     strip.show(); strip.show();
 }
 
-void rPayload (const char* path, uint8_t from) {
+void rPayload (const char* path) {
     
     FRESULT fr;            
     FIL file; 
@@ -412,29 +412,8 @@ void rPayload (const char* path, uint8_t from) {
         f_close(&file);
     }
 
-    // web vs local
-    if (from==0) {
-      ::display.clear();
-      ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
-      ::display.drawString(3,9,"Press DOWN");
-      ::display.drawString(3,19,"to go back");
-      ::display.drawLine(0, 54, 127, 54);
-      ::display.drawLine(0, 53, 127, 53);
-      
-      ::display.drawString(0, 54, "FINISHED PAYLOAD");
-      ::display.display();
-  
-      strip.setPixelColor(0, strip.Color(0,255, 0)); 
-      strip.show(); strip.show();
-  
-      
-      while (!(nuggButtons.dnPressed())) {
-        nuggButtons.getPress();
-        vTaskDelay(2);
-      }
-    }
-    
-
+    strip.setPixelColor(0, strip.Color(0,255, 0));
+    strip.show(); strip.show();
 }
 
 // newFileList returns a paginated list of strings representing the files
@@ -652,7 +631,7 @@ void RubberNugget::selectPayload() {
           payload += "/";
         }
         payload += files[fileListSelected].fname;
-        runPayload(payload.c_str(), 0);
+        runPayload(payload.c_str());
       }
     } else { // none / unknown btn
       continue;
@@ -668,14 +647,14 @@ void RubberNugget::selectPayload() {
   delete[] files;
 }
 
-void RubberNugget::runPayload(const char* path, uint8_t from) {  
+void RubberNugget::runPayload(const char* path) {
   // i have no clue why this works
   for (int i=253; i<255; i++) {
     strip.setPixelColor(0, strip.Color(i,0, 0)); 
     strip.show();
   }
   
-  ::rPayload(path, from);  
+  ::rPayload(path);
   
   for (int i=253; i<255; i++) {
     strip.setPixelColor(0, strip.Color(0,0, 0)); 

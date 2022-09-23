@@ -17,6 +17,9 @@
 #include "mscusb.h"
 #include "flashdisk.h"
 
+#include "src/interface/screens/dir.h"
+#include "src/interface/lib/NuggetInterface.h"
+
 extern SH1106Wire display;
 extern String rubberCss;
 extern String rubberHtml;
@@ -174,7 +177,7 @@ void webget() {
 void webrun() {
   server.send(200, "text/html", "Running payload...");
   String path = server.arg("path");
-  RubberNugget::runPayload(path.c_str(), 1); // provide parameter triggered from webpage
+  RubberNugget::runPayload(path.c_str()); // provide parameter triggered from webpage
 }
 
 void webserverInit(void *p) {
@@ -228,10 +231,12 @@ void setup() {
   strip.show();
   strip.show();
 
-  // initialize & launch payload selector
-  
   xTaskCreate(webserverInit, "webapptask", 12 * 1024, NULL, 5, &webapp); // create task priority 1
-  RubberNugget::selectPayload();
+  NuggetInterface nuggetInterface;
+  NuggetScreen* dirScreen = new DirScreen("/");
+  nuggetInterface.pushScreen(dirScreen);
+  nuggetInterface.start();
+
 }
 
 void loop() { return; }
