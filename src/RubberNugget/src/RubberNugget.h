@@ -20,3 +20,5 @@ class RubberNugget {
   private:
     static void setDefaults();
 };
+
+FILINFO* newFileList(const char* path, int& numFiles);

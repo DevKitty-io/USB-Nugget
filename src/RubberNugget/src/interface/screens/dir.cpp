@@ -1,70 +1,6 @@
 #include "dir.h"
-
-// newFileList2 returns a paginated list of strings representing the files
-// available at the given path. resultsPerPage will be set to number of results
-// returned. On error, it returns nullptr and numFiles is set to -1.
-FILINFO* newFileList2(const char* path, int& numFiles) {
-  uint currentCapacity = 4; // arbitrary, will grow as needed
-  uint filesSoFar = 0;
-  bool errored = false;
-  FILINFO* fileList = new FILINFO[currentCapacity];
-
-  FRESULT res;
-  FF_DIR dir;
-  FILINFO fno;
-
-  res = f_opendir(&dir, path);
-  if (res != FR_OK) {
-    Serial.printf("[newFileList] f_opendir error: %d\n", res);
-    goto onError;
-  }
-
-  for (;;) {
-    res = f_readdir(&dir, &fno); // Read a directory item
-    if (res != FR_OK) {
-      errored = true;
-      break;
-    }
-    if (fno.fname[0] == 0) { // End of dir
-      break;
-    }
-    if (fno.fname[0] == '.') { // Don't show files starting with '.'
-      continue;
-    }
-    // Found a file/dir. Store it, doubling capacity first if needed.
-    if (filesSoFar >= currentCapacity) {
-      FILINFO* newFileList = new FILINFO[currentCapacity*2];
-      for (int i = 0; i < currentCapacity; i++){
-        newFileList[i] = fileList[i];
-      }
-      currentCapacity *= 2;
-      delete[] fileList;
-      fileList = newFileList;
-    }
-    fileList[filesSoFar] = fno;
-    filesSoFar++;
-  }
-  if (errored) {
-    Serial.printf("[newFileList] f_readdir error: %d\n", res);
-    goto onError;
-  }
-  res = f_closedir(&dir);
-  if (res != FR_OK) {
-    Serial.printf("[newFileList] f_closedir error: %d\n", res);
-    goto onError;
-  }
-  if (filesSoFar < 1){
-    Serial.println("[newFileList] directory empty");
-    goto onError;
-  }
-  numFiles = filesSoFar;
-  return fileList;
-
-onError:
-  numFiles = -1;
-  delete[] fileList;
-  return nullptr;
-}
+#include "../../RubberNugget.h"
+#include "../graphics.h"
 
 DirScreen::DirScreen(String path) {
   this->path = path;
@@ -74,7 +10,7 @@ DirScreen::DirScreen(String path) {
   this->top = 0;
 
   // TODO: files could be null; draw/update should handle this
-  this->files = newFileList2(path.c_str(), numFiles);
+  this->files = newFileList(path.c_str(), numFiles);
 }
 
 DirScreen::~DirScreen() {
@@ -169,7 +105,7 @@ bool DirScreen::draw() {
     display->drawString(25, 54, path);
   }
   // Cat image
-  //display->drawXbm(0, 0, 128, 64, RubberNugget_bits);
+  display->drawXbm(0, 0, 128, 64, RubberNugget_bits);
   display->drawString(100,0,"v1.1");
   display->drawRect(98,0,30,12);
 
