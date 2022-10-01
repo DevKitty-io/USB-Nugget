@@ -2,7 +2,7 @@
 #include "../../RubberNugget.h"
 #include "../graphics.h"
 
-ScriptRunnerScreen::ScriptRunnerScreen(String path, unsigned long TTL) {
+ScriptRunnerScreen::ScriptRunnerScreen(String path) {
   this->has_run = false;
   this->path = path;
   //this->alwaysUpdates(true);
@@ -22,7 +22,8 @@ int ScriptRunnerScreen::update(int btn) {
 
 bool ScriptRunnerScreen::draw() {
   if (!has_run) {
-    return false;
+    display->clear();
+    return true;
   }
   display->drawXbm(0, 0, 128, 64, high_signal_bits);
   display->drawString(3,9,"Press LEFT");
@@ -30,9 +31,5 @@ bool ScriptRunnerScreen::draw() {
   display->drawLine(0, 54, 127, 54);
   display->drawLine(0, 53, 127, 53);
   display->drawString(0, 54, "FINISHED PAYLOAD");
-
-  //display->drawString(3,12, this->path);
-  //display->drawXbm(0, 0, 128, 64, RubberNugget_bits);
-  //return true;
   return true;
 }

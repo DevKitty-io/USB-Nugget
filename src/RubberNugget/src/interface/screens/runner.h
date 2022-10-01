@@ -6,7 +6,7 @@
 
 class ScriptRunnerScreen : public NuggetScreen {
   public:
-    ScriptRunnerScreen(String path, unsigned long TTL);
+    ScriptRunnerScreen(String path);
     bool draw();
     int update(int);
   private:

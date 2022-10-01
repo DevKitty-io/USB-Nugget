@@ -111,7 +111,7 @@ int DirScreen::update(int btn) {
         }
         nextPath += files[selected].fname;
         Serial.printf("Before dir screen alloc. Mem: %d\n", ESP.getFreeHeap());
-        DirScreen* subdir = new DirScreen(nextPath);
+        NuggetScreen* subdir = new DirScreen(nextPath);
         this->pushScreen(subdir);
         return SCREEN_PUSH;
       } else { // file; assume it's a payload and run it
@@ -121,7 +121,7 @@ int DirScreen::update(int btn) {
         }
         payload += files[selected].fname;
         Serial.printf("Before runner alloc. Mem: %d\n", ESP.getFreeHeap());
-        ScriptRunnerScreen* runner = new ScriptRunnerScreen(payload, 2000);
+        NuggetScreen* runner = new ScriptRunnerScreen(payload);
         this->pushScreen(runner);
         return SCREEN_PUSH;
         //runPayload(payload.c_str(), 0);
