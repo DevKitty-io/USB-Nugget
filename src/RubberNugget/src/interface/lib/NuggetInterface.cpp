@@ -78,6 +78,10 @@ int NuggetScreen::_update(){
 NuggetInterface::NuggetInterface(){
   SH1106Wire* nDisplay = new SH1106Wire(0x3C, 33, 35);
   this->inputs = new NuggetInputs();
+  this->screenLock = xSemaphoreCreateMutex();
+  if (this->screenLock == nullptr) {
+    Serial.println("[NuggetInterface] mutex could not be created");
+  }
   nDisplay->init();
   nDisplay->flipScreenVertically();
   nDisplay->setTextAlignment(TEXT_ALIGN_LEFT);
@@ -93,23 +97,38 @@ NuggetInterface::~NuggetInterface(){
 }
 
 bool NuggetInterface::start(){
-  this->draw();
   while (true) {
+    if (xSemaphoreTake(this->screenLock, 0)==pdFALSE) {
+      delay(10);
+      continue;
+    }
+    this->draw();
     int action = this->currentScreenNode->screen->_update();
     if (action==SCREEN_BACK){
       this->popScreen();
-      this->draw();
-      continue;
     }
     if (action==SCREEN_REDRAW){
-      this->draw();
     }
     if (action==SCREEN_PUSH){
       this->draw();
       this->currentScreenNode->screen->update(EVENT_INIT);
-      this->draw();
     }
+    xSemaphoreGive(this->screenLock);
   }
+}
+
+// injectScreen pushes a screen onto the stack e.g. from a thread that did
+// not call NuggetInterface::start. This function returns false if the screen
+// could not be locked in wait TICKS
+bool NuggetInterface::injectScreen(NuggetScreen* screen){
+  if (xSemaphoreTake(this->screenLock, 200)==pdFALSE) {
+    // could not acquire lock
+    return false;
+  }
+  this->pushScreen(screen);
+  this->draw();
+  this->currentScreenNode->screen->update(EVENT_INIT);
+  xSemaphoreGive(this->screenLock);
 }
 
 bool NuggetInterface::pushScreen(NuggetScreen* screen){
@@ -131,7 +150,7 @@ bool NuggetInterface::popScreen(){
   if (this->currentScreenNode->prev == nullptr){
     return false;
   }
-  ScreenNode* popped = this->currentScreenNode;
+  volatile ScreenNode* popped = this->currentScreenNode;
   this->currentScreenNode = this->currentScreenNode->prev;
   delete popped->screen;
   delete popped;

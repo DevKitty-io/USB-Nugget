@@ -65,7 +65,7 @@ class NuggetScreen {
 
 struct ScreenNode {
    NuggetScreen* screen;
-   ScreenNode* prev;
+   volatile ScreenNode* prev;
 };
 
 
@@ -80,10 +80,12 @@ class NuggetInterface {
     bool draw();
     bool pushScreen(NuggetScreen*);
     bool popScreen();
+    bool injectScreen(NuggetScreen*);
   private:
     SH1106Wire* display;
     NuggetInputs* inputs;
-    ScreenNode* currentScreenNode;
+    volatile ScreenNode* currentScreenNode;
+    volatile SemaphoreHandle_t screenLock;
 };
 
 
