@@ -173,11 +173,19 @@ void webget() {
 
 }
 
+NuggetInterface* nuggetInterface;
+
 // run payload with get request path
 void webrun() {
   server.send(200, "text/html", "Running payload...");
   String path = server.arg("path");
-  RubberNugget::runPayload(path.c_str()); // provide parameter triggered from webpage
+  NuggetScreen* runner = new ScriptRunnerScreen(path);
+  bool ok = nuggetInterface->injectScreen(runner);
+  if (!ok) {
+    // TODO: send 503 when device is busy
+    //server.send(503, "text/html", "Device busy");
+    return;
+  }
 }
 
 void webserverInit(void *p) {
@@ -232,10 +240,10 @@ void setup() {
   strip.show();
 
   xTaskCreate(webserverInit, "webapptask", 12 * 1024, NULL, 5, &webapp); // create task priority 1
-  NuggetInterface nuggetInterface;
+  nuggetInterface = new NuggetInterface;
   NuggetScreen* dirScreen = new DirScreen("/");
-  nuggetInterface.pushScreen(dirScreen);
-  nuggetInterface.start();
+  nuggetInterface->pushScreen(dirScreen);
+  nuggetInterface->start();
 
 }
 
