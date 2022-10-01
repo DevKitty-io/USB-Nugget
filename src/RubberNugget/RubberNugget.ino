@@ -17,6 +17,7 @@
 #include "mscusb.h"
 #include "flashdisk.h"
 
+#include "src/utils.h"
 #include "src/interface/screens/dir.h"
 #include "src/interface/lib/NuggetInterface.h"
 
@@ -63,80 +64,12 @@ void delpayload() {
 }
 
 void websave() {
-  // path should be corrected, i.e. by index.html's pathCorrector function
-  // Each path should start with '/' and not end with '/'
-  String path = (server.arg("path"));
-  const char* constPath = path.c_str();
-
-  // construct directories as needed
-  FILINFO filinfo;
-  int pathSoFarIdx = 1;
-  while(true) {
-    int nextDir = path.indexOf("/", pathSoFarIdx);
-    if (nextDir == -1){
-      break;
-    }
-    String pathSoFar = path.substring(0, nextDir);
-    if (FR_OK != f_stat(pathSoFar.c_str(), &filinfo)){
-      if (f_mkdir(pathSoFar.c_str()) != FR_OK) {
-        server.send(500, "text/plain", "Could not create directory");
-        return;
-      }
-    }
-    pathSoFarIdx = nextDir+1;
-  }
-
-  // Create file
-  FIL file;
-  if (FR_OK != f_open(&file, constPath, FA_WRITE | FA_CREATE_ALWAYS)){
-    server.send(500, "text/plain", "Could not open file for writing");
+  fileOp op = saveFileBase64(server.arg("path"), server.arg("payloadText"));
+  if (!op.ok) {
+    server.send(500, "text/plain", op.err_msg);
     return;
   }
-
-  // Write to file
-  String content = (server.arg("payloadText"));
-  content.replace(" ", "/"); // why
-  const char* contentBase64 = content.c_str();
-  size_t payloadLength = BASE64::decodeLength(contentBase64);
-  uint8_t payloadContent[payloadLength];
-  BASE64::decode(contentBase64, payloadContent);
-  UINT written = 0;
-  if (FR_OK != f_write(&file, payloadContent, payloadLength, &written)){
-    server.send(500, "text/plain", "Could not write to file");
-    f_close(&file);
-    return;
-  }
-  f_close(&file);
-  server.send(200, "text/plain", "Payload created successfully");
-}
-
-// decode base64 and run
-void webrunlive() {
-  server.send(200, "text/plain", "Running payload...");
-  if (server.hasArg("plain")) {
-    Serial.print("Decoding: ");
-    String decoded = (server.arg("plain"));
-    char tab2[decoded.length() + 1];
-    strcpy(tab2, decoded.c_str());
-
-    for (int i = 0; i < decoded.length(); i++) {
-      Serial.print(tab2[i]);
-    }
-
-    Serial.println();
-    Serial.println(decoded.length());
-    Serial.println("-------");
-
-    uint8_t raw[BASE64::decodeLength(tab2)];
-    Serial.println(BASE64::decodeLength(tab2));
-    BASE64::decode(tab2, raw);
-
-    String meow = (char*) raw;
-    meow = meow.substring(0, (int) BASE64::decodeLength(tab2));
-    RubberNugget::runLivePayload(meow);
-    Serial.println();
-    Serial.println("-------");
-  }
+  server.send(200, "text/plain", "payload created successfully");
 }
 
 void webget() {
@@ -179,6 +112,24 @@ NuggetInterface* nuggetInterface;
 void webrun() {
   server.send(200, "text/html", "Running payload...");
   String path = server.arg("path");
+  NuggetScreen* runner = new ScriptRunnerScreen(path);
+  bool ok = nuggetInterface->injectScreen(runner);
+  if (!ok) {
+    // TODO: send 503 when device is busy
+    //server.send(503, "text/html", "Device busy");
+    return;
+  }
+}
+
+void webrunlive() {
+  // TODO: use server.arg "content" or "payload" instead of "plain"
+  String path("/.tmp_webrun");
+  fileOp op = saveFileBase64(path, server.arg("plain"));
+  if (!op.ok) {
+    server.send(500, "text/plain", op.err_msg);
+    return;
+  }
+  server.send(200, "text/plain", "running live payload");
   NuggetScreen* runner = new ScriptRunnerScreen(path);
   bool ok = nuggetInterface->injectScreen(runner);
   if (!ok) {
