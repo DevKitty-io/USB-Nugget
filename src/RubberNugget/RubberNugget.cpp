@@ -541,7 +541,7 @@ bool displayFiles(FILINFO* files, String* currentPath, int numFiles, int selecte
     ::display.drawString(25, 54, *currentPath);
   }
   // Cat image
-  ::display.drawXbm(0, 0, 128, 64, RubberNugget_bits);
+  ::display.drawXbm(0, 0, 128, 64, main_cat_image_bits);
   ::display.drawString(100,0,"v1.1");
   ::display.drawRect(98,0,30,12);
 
