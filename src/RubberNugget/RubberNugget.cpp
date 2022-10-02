@@ -370,7 +370,7 @@ void rPayload (String payloadRaw) {
 
     //manual update display
     payloadSelector.updateDisplay();
-    ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
+    ::display.drawXbm(0, 0, 128, 64, cat_with_exclamation_points_image_bits);
     ::display.display();
     strip.setPixelColor(0, strip.Color(0,0, 0)); 
     strip.show(); strip.show();
@@ -415,7 +415,7 @@ void rPayload (const char* path, uint8_t from) {
     // web vs local
     if (from==0) {
       ::display.clear();
-      ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
+      ::display.drawXbm(0, 0, 128, 64, cat_with_exclamation_points_image_bits);
       ::display.drawString(3,9,"Press DOWN");
       ::display.drawString(3,19,"to go back");
       ::display.drawLine(0, 54, 127, 54);
