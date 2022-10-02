@@ -244,7 +244,7 @@ void processDuckyScript(String ducky) {
   else if (tCommand.equals("DELAY")) {
     ::display.drawString(3,12,"DELAY: ");
     ::display.drawString(3,22,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
-    ::display.drawXbm(0, 0, 128, 64, reload_bits);
+    ::display.drawXbm(0, 0, 128, 64, cat_with_reload_spinner_image_bits);
     payloadRun.updateDisplay();
     delay(ducky.substring(ducky.indexOf(' ')+1, ducky.length()).toInt()); // delay in MS
     Serial.println("Delayed!");       
@@ -253,14 +253,14 @@ void processDuckyScript(String ducky) {
     ::display.drawString(3,12,"DEFAULT");
     ::display.drawString(3,22,"DELAY:");
     ::display.drawString(3,32,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
-    ::display.drawXbm(0, 0, 128, 64, reload_bits);
+    ::display.drawXbm(0, 0, 128, 64, cat_with_reload_spinner_image_bits);
     payloadRun.updateDisplay();
     defaultDelay = ducky.substring(ducky.indexOf(' ')+1, ducky.length()).toInt();
   }
   else if (tCommand.equals("LED")) {
     ::display.drawString(3,12,"COLOR:");
     ::display.drawString(3,22,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length())); // accept single color parameter
-    ::display.drawXbm(0, 0, 128, 64, reload_bits);
+    ::display.drawXbm(0, 0, 128, 64, cat_with_reload_spinner_image_bits);
     payloadRun.updateDisplay();
     String color = (String) ducky.substring(ducky.indexOf(' ')+1, ducky.length());
     color.toUpperCase();
