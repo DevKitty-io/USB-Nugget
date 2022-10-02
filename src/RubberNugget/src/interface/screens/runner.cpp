@@ -1,5 +1,6 @@
 #include "runner.h"
 #include "../../RubberNugget.h"
+#include "../../utils.h"
 #include "../graphics.h"
 
 ScriptRunnerScreen::ScriptRunnerScreen(String path) {
@@ -10,7 +11,11 @@ ScriptRunnerScreen::ScriptRunnerScreen(String path) {
 
 int ScriptRunnerScreen::update(int btn) {
   if (!has_run) {
-    RubberNugget::runPayload(this->path.c_str());
+    fileOp op = readFile(String(path));
+    if (op.ok) {
+      RubberNugget::runPayload(op.result);
+    }
+    // TODO: else set error to make draw() show that error
     has_run = true;
     return SCREEN_REDRAW;
   }

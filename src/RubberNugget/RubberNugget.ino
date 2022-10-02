@@ -66,44 +66,24 @@ void delpayload() {
 void websave() {
   fileOp op = saveFileBase64(server.arg("path"), server.arg("payloadText"));
   if (!op.ok) {
-    server.send(500, "text/plain", op.err_msg);
+    server.send(500, "text/plain", op.result);
     return;
   }
   server.send(200, "text/plain", "payload created successfully");
 }
 
 void webget() {
-  FRESULT fr;
-  FIL file;
-  uint16_t size;
-  UINT bytesRead;
-
   String path = server.arg("path");
-  fr = f_open(&file, path.c_str(), FA_READ);
-
-  if (fr != FR_OK) {
-    // TODO: most likely file not found, but we need to check why fr != OK.
-    // Marking 500 until resolved
-    server.send(500, "plain/text", String("Error loading script"));
+  fileOp op = readFile(path);
+  if (!op.ok) {
+    // TODO: send 500/4XX depending on file existence vs internal error
+    server.send(500, "text/plain", String("error getting payload: ") + op.result);
     return;
   }
-
-  size = f_size(&file);
-  char * data = NULL;
-
-  data = (char*) malloc(size);
-
-  fr = f_read(&file, data, (UINT) size, &bytesRead);
-  if (fr == FR_OK) {
-    String payload = String(data);
-    payload = payload.substring(0, bytesRead);
-    payload = base64::encode(payload);
-    server.send(200, "plain/text", payload);
-  } else {
-    server.send(500, "plain/text", String("Error reading script"));
-  }
-  f_close(&file);
-
+  Serial.println(op.result);
+  String payload = base64::encode(op.result);
+  Serial.println(payload);
+  server.send(200, "text/plain", payload);
 }
 
 NuggetInterface* nuggetInterface;
@@ -126,7 +106,7 @@ void webrunlive() {
   String path("/.tmp_webrun");
   fileOp op = saveFileBase64(path, server.arg("plain"));
   if (!op.ok) {
-    server.send(500, "text/plain", op.err_msg);
+    server.send(500, "text/plain", op.result);
     return;
   }
   server.send(200, "text/plain", "running live payload");

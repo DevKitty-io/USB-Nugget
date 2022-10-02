@@ -11,6 +11,7 @@
 #include "Nugget_Interface.h" // construct Nugget Interface
 #include "Nugget_Buttons.h"
 
+#include "utils.h"
 #include "SH1106Wire.h"
 #include "interface/graphics.h"
 #include "../keyboardlayout.h"
@@ -102,7 +103,6 @@ void RubberNugget::init() {
     display.init();
     display.flipScreenVertically();
     display.setTextAlignment(TEXT_ALIGN_LEFT);
-    display.setFont(DejaVu_Sans_Mono_10);
     display.clear();
     display.display();
 
@@ -351,71 +351,6 @@ void processDuckyScript(String ducky) {
   payloadRun.updateDisplay();
 }
 
-void rPayload (String payloadRaw) {
-    strip.setPixelColor(0, strip.Color(255,0, 0)); 
-    strip.show(); strip.show(); strip.show();
-    
-    String command;
-    
-    for (int i=0; i < payloadRaw.length(); i++) {
-        if (payloadRaw.charAt(i) == '\n') {
-          Serial.println(command);
-          processDuckyScript(command);
-          command = "";
-        }
-        command+=payloadRaw[i];
-    }
-    processDuckyScript(command);
-    ::display.clear();
-
-    //manual update display
-    payloadSelector.updateDisplay();
-    ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
-    ::display.display();
-    strip.setPixelColor(0, strip.Color(0,0, 0)); 
-    strip.show(); strip.show();
-}
-
-void rPayload (const char* path) {
-    
-    FRESULT fr;            
-    FIL file; 
-    uint16_t size;
-    UINT bytesRead;
-    
-    fr = f_open(&file, path, FA_READ);
-     
-    if (fr == FR_OK){
-        size = f_size(&file);
-        char * data = NULL;
-
-        data = (char*) malloc(size);
-        Serial.printf("File size: %d bytes", size);
-
-        fr = f_read(&file, data, (UINT) size, &bytesRead);
-        if (fr == FR_OK){
-            Serial.println("File successfully read!");
-            String command;
-            
-            for (int i=0; i < bytesRead; i++) {
-                if (data[i] == 0x0a) {
-                  Serial.println(command);
-                  processDuckyScript(command);
-                  command = "";
-                }
-                command+=data[i];
-            }
-            processDuckyScript(command);
-        }
-        free(data); // free allocated memory when you don't need it
-
-        f_close(&file);
-    }
-
-    strip.setPixelColor(0, strip.Color(0,255, 0));
-    strip.show(); strip.show();
-}
-
 // newFileList returns a paginated list of strings representing the files
 // available at the given path. resultsPerPage will be set to number of results
 // returned. On error, it returns nullptr and numFiles is set to -1.
@@ -482,25 +417,29 @@ onError:
   return nullptr;
 }
 
-void RubberNugget::runPayload(const char* path) {
-  // i have no clue why this works
-  for (int i=253; i<255; i++) {
-    strip.setPixelColor(0, strip.Color(i,0, 0)); 
-    strip.show();
-  }
-  
-  ::rPayload(path);
-  
-  for (int i=253; i<255; i++) {
-    strip.setPixelColor(0, strip.Color(0,0, 0)); 
-    strip.show();
-  }
-}
+void RubberNugget::runPayload(String payload) {
+    strip.setPixelColor(0, strip.Color(255,0, 0));
+    strip.show(); strip.show(); strip.show();
 
-void RubberNugget::runLivePayload(String payloadRaw) {
-//  strip.setPixelColor(0, strip.Color(0,0, 255)); strip.show();
-  delay(100);
-  ::rPayload(payloadRaw); 
+    String command;
+
+    for (int i=0; i < payload.length(); i++) {
+        if (payload.charAt(i) == '\n') {
+          Serial.println(command);
+          processDuckyScript(command);
+          command = "";
+        }
+        command+=payload[i];
+    }
+    processDuckyScript(command);
+    ::display.clear();
+
+    //manually update display
+    payloadSelector.updateDisplay();
+    ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
+    ::display.display();
+    strip.setPixelColor(0, strip.Color(0,0, 0));
+    strip.show(); strip.show();
 }
 
 // allPayloadPaths returns a comma seperated list of paths to all payloads.
