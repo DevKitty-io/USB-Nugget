@@ -294,7 +294,7 @@ void processDuckyScript(String ducky) {
     else {
       ::display.drawString(3,22,String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())));
     }
-    display.drawXbm(0, 0, 128, 64, medium_signal_bits);
+    display.drawXbm(0, 0, 128, 64, cat_with_one_exclamation_point_image_bits);
     payloadRun.updateDisplay();
     Serial.println("String");
     String tmpString = String(ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
