@@ -1,4 +1,5 @@
 #pragma once
+#include "./graphics/Arrow_Left.h"
 #define high_signal_width 128
 #define high_signal_height 64
 static unsigned char high_signal_bits[] = {
@@ -196,13 +197,6 @@ static unsigned char Navbar_Outline_bits[] = {
 #define Arrow_Right_y_hot 56
 static unsigned char Arrow_Right_bits[] = {
    0x01, 0x03, 0x07, 0x0f, 0x07, 0x03, 0x01 };
-
-#define Arrow_Left_width 4
-#define Arrow_Left_height 7
-#define Arrow_Left_x_hot 2
-#define Arrow_Left_y_hot 56
-static unsigned char Arrow_Left_bits[] = {
-   0x08, 0x0c, 0x0e, 0x0f, 0x0e, 0x0c, 0x08 };
 
 #define attack_width 128
 #define attack_height 64
