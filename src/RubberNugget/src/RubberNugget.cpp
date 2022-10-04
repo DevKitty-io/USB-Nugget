@@ -14,7 +14,7 @@
 #include "utils.h"
 #include "SH1106Wire.h"
 #include "interface/graphics.h"
-#include "../keyboardlayout.h"
+//#include "../keyboardlayout.h"
 
 SH1106Wire display(0x3C, 33, 35);
 
@@ -203,152 +203,8 @@ void RubberNugget::init() {
     keyboard.setCallbacks(new MyHIDCallbacks());
 }
 
-bool keyKnown(String keyPress) {
-  Serial.print("looking for: ");
-  Serial.println(keyPress);
-  for (int i=0; i< (sizeof(keyMapRN)/sizeof(keyMapRN[0])); i++) {
-    if (keyPress.equals(keyMapRN[i].title)) {
-      Serial.print(keyMapRN[i].title);
-      Serial.println(" found!");
-      return true;
-    }
-  }
-  return false;
-}
-
 void RubberNugget::setDefaults() {
   
-}
-
-void pressNamedKey(String keyPress, uint8_t modifiers) {
-  for (int i=0; i< (sizeof(keyMapRN)/sizeof(keyMapRN[0])); i++) {
-    if (keyPress.equals(keyMapRN[i].title)) {
-      keyboard.sendPress(keyMapRN[i].key, modifiers);
-    }
-  }
-}
-
-uint16_t defaultDelay = 10;
-
-void processDuckyScript(String ducky) {
-  String tCommand = ducky.substring(0, ducky.indexOf(' ')); // get command
-  tCommand.toUpperCase(); tCommand.trim();
-
-  ::display.clear();
-  payloadRun.addFooter("RUNNING PAYLOAD");
-  payloadRun.updateDisplay();
-  
-  if (tCommand.equals("REM")) {
-    Serial.println("Comment");
-  }
-  else if (tCommand.equals("DELAY")) {
-    ::display.drawString(3,12,"DELAY: ");
-    ::display.drawString(3,22,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
-    ::display.drawXbm(0, 0, 128, 64, reload_bits);
-    payloadRun.updateDisplay();
-    delay(ducky.substring(ducky.indexOf(' ')+1, ducky.length()).toInt()); // delay in MS
-    Serial.println("Delayed!");       
-  }
-  else if (tCommand.equals("DEFAULT_DELAY") or tCommand.equals("DEFAULTDELAY")) {
-    ::display.drawString(3,12,"DEFAULT");
-    ::display.drawString(3,22,"DELAY:");
-    ::display.drawString(3,32,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
-    ::display.drawXbm(0, 0, 128, 64, reload_bits);
-    payloadRun.updateDisplay();
-    defaultDelay = ducky.substring(ducky.indexOf(' ')+1, ducky.length()).toInt();
-  }
-  else if (tCommand.equals("LED")) {
-    ::display.drawString(3,12,"COLOR:");
-    ::display.drawString(3,22,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length())); // accept single color parameter
-    ::display.drawXbm(0, 0, 128, 64, reload_bits);
-    payloadRun.updateDisplay();
-    String color = (String) ducky.substring(ducky.indexOf(' ')+1, ducky.length());
-    color.toUpperCase();
-    
-    if (color.equals("R")) { strip.setPixelColor(0, strip.Color(255,0, 0)); }
-    else if (color.equals("G")) {
-      strip.setPixelColor(0, strip.Color(0,255, 0));
-    }
-     else if (color.equals("B")) {
-      strip.setPixelColor(0, strip.Color(0,0, 255));
-    }
-     else if (color.equals("Y")) {
-      strip.setPixelColor(0, strip.Color(255,255, 0));
-    }
-     else if (color.equals("C")) {
-      strip.setPixelColor(0, strip.Color(0,255, 255));
-    }
-     else if (color.equals("M")) {
-      strip.setPixelColor(0, strip.Color(255,0, 255));
-    }
-     else if (color.equals("W")) {
-      strip.setPixelColor(0, strip.Color(120,120, 120));
-    }
-    strip.show(); strip.show();
-  }
-  else if (tCommand.equals("STRING")) {
-    ::display.drawString(3,12,"STRING: ");
-    if (String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())).length() > 11) {
-      ::display.drawString(3,22,String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())).substring(0,8)+"...");
-    }
-    else {
-      ::display.drawString(3,22,String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())));
-    }
-    display.drawXbm(0, 0, 128, 64, medium_signal_bits);
-    payloadRun.updateDisplay();
-    Serial.println("String");
-    String tmpString = String(ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
-    keyboard.sendString(tmpString);    
-  }  
-  
-  else if (keyKnown(tCommand)) {
-    ::display.drawString(3,12,"KEY PRESS");
-    ducky.trim(); // remove leading, trailing whitespace
-    int currentTokenLeftIndex = 0;
-    int currentTokenRightIndex = 0;
-    String currentToken;
-    uint8_t modifiers = 0;
-
-    while (currentTokenLeftIndex < ducky.length()) {
-      int nextSpace = ducky.indexOf(' ', currentTokenLeftIndex);
-      if (nextSpace==-1){
-        currentTokenRightIndex = ducky.length();
-      } else {
-        currentTokenRightIndex = nextSpace;
-      }
-      currentToken = ducky.substring(currentTokenLeftIndex, currentTokenRightIndex);
-      if (currentToken == "CTRL" || currentToken == "CONTROL"){
-        modifiers += KEY_CTRL;
-      } else if (currentToken == "SHIFT"){
-        modifiers += KEY_SHIFT;
-      } else if (currentToken == "ALT") {
-        modifiers += KEY_ALT;
-      } else if (currentToken.length() != 1) {
-        // Search for named key, e.g. DELETE or TAB
-        if (keyKnown(currentToken)){
-          pressNamedKey(currentToken, modifiers);
-          delay(2);
-        } else {
-          // unknown named key
-          ::display.drawString(3,22,String("ERROR"));
-          payloadRun.updateDisplay();
-          delay(1000);
-        }
-      } else {
-        // Single letter like the 's' in: CTRL s
-        unsigned char keycode = keymap[currentToken[0]].usage;
-        keyboard.sendPress(keycode, modifiers);
-        delay(2);
-      }
-      currentTokenLeftIndex = currentTokenRightIndex + 1;
-    }
-    keyboard.sendRelease();
-  }
-  else {
-    Serial.println("Command not found");
-  }
-
-  payloadRun.updateDisplay();
 }
 
 // newFileList returns a paginated list of strings representing the files
@@ -415,31 +271,6 @@ onError:
   numFiles = -1;
   delete[] fileList;
   return nullptr;
-}
-
-void RubberNugget::runPayload(String payload) {
-    strip.setPixelColor(0, strip.Color(255,0, 0));
-    strip.show(); strip.show(); strip.show();
-
-    String command;
-
-    for (int i=0; i < payload.length(); i++) {
-        if (payload.charAt(i) == '\n') {
-          Serial.println(command);
-          processDuckyScript(command);
-          command = "";
-        }
-        command+=payload[i];
-    }
-    processDuckyScript(command);
-    ::display.clear();
-
-    //manually update display
-    payloadSelector.updateDisplay();
-    ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
-    ::display.display();
-    strip.setPixelColor(0, strip.Color(0,0, 0));
-    strip.show(); strip.show();
 }
 
 // allPayloadPaths returns a comma seperated list of paths to all payloads.

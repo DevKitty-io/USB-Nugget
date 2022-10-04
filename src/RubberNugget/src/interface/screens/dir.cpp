@@ -1,6 +1,7 @@
 #include "dir.h"
-#include "../../RubberNugget.h"
 #include "../graphics.h"
+#include "../../RubberNugget.h"
+#include "../../utils.h"
 
 DirScreen::DirScreen(String path) {
   this->path = path;
@@ -51,16 +52,20 @@ int DirScreen::update(int btn) {
         this->pushScreen(subdir);
         return SCREEN_PUSH;
       } else { // file; assume it's a payload and run it
-        String payload = path;
-        if (payload.length()!=1){
-          payload += "/";
+        String payloadPath = path;
+        if (payloadPath.length()!=1){
+          payloadPath += "/";
         }
-        payload += files[selected].fname;
+        payloadPath += files[selected].fname;
         Serial.printf("Before runner alloc. Mem: %d\n", ESP.getFreeHeap());
-        NuggetScreen* runner = new ScriptRunnerScreen(payload);
-        this->pushScreen(runner);
-        return SCREEN_PUSH;
-        //runPayload(payload.c_str(), 0);
+        fileOp op = readFile(payloadPath);
+        if (op.ok) {
+          NuggetScreen* runner = new ScriptRunnerScreen(op.result);
+          this->pushScreen(runner);
+          return SCREEN_PUSH;
+        } else {
+          // TODO: inform the user the payload could not be opened
+        }
       }
   }
   return SCREEN_REDRAW;
