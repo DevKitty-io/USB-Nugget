@@ -55,6 +55,9 @@ void NuggetScreen::setDisplay(SH1106Wire* display){
 void NuggetScreen::setInputs(NuggetInputs* inputs){
   this->inputs = inputs;
 }
+void NuggetScreen::setStrip(Adafruit_NeoPixel* strip){
+  this->strip = strip;
+}
 void NuggetScreen::setNuggetInterface(NuggetInterface* nI){
   this->nuggetInterface = nI;
 }
@@ -88,12 +91,17 @@ NuggetInterface::NuggetInterface(){
   nDisplay->setFont(DejaVu_Sans_Mono_10);
   this->display = nDisplay;
   this->currentScreenNode = nullptr;
+  this->strip = new Adafruit_NeoPixel(NEOPIXEL_PIN_CNT, NEOPIXEL_PIN, NEO_RGB + NEO_KHZ800);
+  this->strip->begin();
 }
 
 NuggetInterface::~NuggetInterface(){
   while (this->currentScreenNode != nullptr){
     this->popScreen();
   }
+  delete this->display;
+  delete this->inputs;
+  delete this->strip;
 }
 
 bool NuggetInterface::start(){
@@ -137,6 +145,7 @@ bool NuggetInterface::pushScreen(NuggetScreen* screen){
   }
   screen->setDisplay(this->display);
   screen->setInputs(this->inputs);
+  screen->setStrip(this->strip);
   screen->setNuggetInterface(this);
   ScreenNode* nextScreenNode = new ScreenNode;
   nextScreenNode->prev = this->currentScreenNode;

@@ -1,6 +1,7 @@
 #ifndef NUGGET_INTERFACE_H
 #define NUGGET_INTERFACE_H
 
+#include <Adafruit_NeoPixel.h>
 #include "SH1106Wire.h"
 
 //----------------------------------------
@@ -16,9 +17,10 @@
 #define BTN_LEFT  11
 #define BTN_RIGHT  7
 
-#define EVENT_INIT 100
+#define NEOPIXEL_PIN 12
+#define NEOPIXEL_PIN_CNT 1
 
-class NuggetScreen;
+#define EVENT_INIT 100
 
 class NuggetInputs {
    public:
@@ -48,11 +50,13 @@ class NuggetScreen {
       virtual int update(int){return SCREEN_NONE;};
       void setDisplay(SH1106Wire*);
       void setInputs(NuggetInputs*);
+      void setStrip(Adafruit_NeoPixel*);
       void setNuggetInterface(NuggetInterface*);
       int _update();
    protected:
       SH1106Wire* display;
       NuggetInputs* inputs;
+      Adafruit_NeoPixel* strip;
       void pushScreen(NuggetScreen*);
       void alwaysUpdates(bool);
    private:
@@ -84,6 +88,7 @@ class NuggetInterface {
   private:
     SH1106Wire* display;
     NuggetInputs* inputs;
+    Adafruit_NeoPixel* strip;
     volatile ScreenNode* currentScreenNode;
     volatile SemaphoreHandle_t screenLock;
 };
