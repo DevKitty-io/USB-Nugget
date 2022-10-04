@@ -64,12 +64,17 @@ void delpayload() {
 }
 
 void websave() {
-  fileOp op = saveFileBase64(server.arg("path"), server.arg("payloadText"));
-  if (!op.ok) {
+  fileOp decodeOp = base64Decode(server.arg("payloadText"));
+  if (!decodeOp.ok){
     server.send(500, "text/plain", op.result);
     return;
   }
-  server.send(200, "text/plain", "payload created successfully");
+  fileOp saveOp = saveFile(server.arg("path"), decodeOp.result);
+  if (!saveOp.ok){
+    server.send(500, "text/plain", op.result);
+    return;
+  }
+  server.send(200, "text/plain", "payload saved successfully");
 }
 
 void webget() {
@@ -80,9 +85,7 @@ void webget() {
     server.send(500, "text/plain", String("error getting payload: ") + op.result);
     return;
   }
-  Serial.println(op.result);
   String payload = base64::encode(op.result);
-  Serial.println(payload);
   server.send(200, "text/plain", payload);
 }
 
@@ -90,33 +93,27 @@ NuggetInterface* nuggetInterface;
 
 // run payload with get request path
 void webrun() {
-  server.send(200, "text/html", "Running payload...");
-  String path = server.arg("path");
-  NuggetScreen* runner = new ScriptRunnerScreen(path);
-  bool ok = nuggetInterface->injectScreen(runner);
-  if (!ok) {
-    // TODO: send 503 when device is busy
-    //server.send(503, "text/html", "Device busy");
+  fileOp op = readFile(server.arg("path"));
+  if (op.ok) {
+    server.send(200, "text/html", "Running payload...");
+    NuggetScreen* runner = new ScriptRunnerScreen(op.result);
+    bool ok = nuggetInterface->injectScreen(runner);
     return;
   }
+  server.send(500, "text/html", "couldn't run payload: " + op.result);
 }
 
 void webrunlive() {
   // TODO: use server.arg "content" or "payload" instead of "plain"
-  String path("/.tmp_webrun");
-  fileOp op = saveFileBase64(path, server.arg("plain"));
-  if (!op.ok) {
-    server.send(500, "text/plain", op.result);
-    return;
-  }
-  server.send(200, "text/plain", "running live payload");
-  NuggetScreen* runner = new ScriptRunnerScreen(path);
-  bool ok = nuggetInterface->injectScreen(runner);
-  if (!ok) {
+  fileOp op = base64Decode(server.arg("plain"));
+  if (op.ok) {
+    server.send(200, "text/plain", "running live payload");
+    NuggetScreen* runner = new ScriptRunnerScreen(op.result);
+    bool ok = nuggetInterface->injectScreen(runner);
     // TODO: send 503 when device is busy
-    //server.send(503, "text/html", "Device busy");
     return;
   }
+  server.send(500, "text/html", "Device busy");
 }
 
 void webserverInit(void *p) {

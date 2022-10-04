@@ -1,10 +1,10 @@
 #include "utils.h"
 
-fileOp saveFileBase64(String path, String content) {
+fileOp saveFile(String path, String content) {
   fileOp ret;
   ret.ok = false;
 
-  // construct directories as needed
+  // create parent directories as needed
   FILINFO filinfo;
   int pathSoFarIdx = 1;
   while(true) {
@@ -30,15 +30,10 @@ fileOp saveFileBase64(String path, String content) {
   }
 
   // Write to file
-  content.replace(" ", "/"); // why
-  const char* contentBase64 = content.c_str();
-  size_t payloadLength = BASE64::decodeLength(contentBase64);
-  uint8_t payloadContent[payloadLength];
-  BASE64::decode(contentBase64, payloadContent);
   UINT written = 0;
-  if (FR_OK != f_write(&file, payloadContent, payloadLength, &written)){
+  if (FR_OK != f_write(&file, content.c_str(), content.length(), &written)){
     f_close(&file);
-    ret.result = String("Could not write to file");
+    ret.result = String("could not write to file");
     return ret;
   }
   f_close(&file);
@@ -76,5 +71,16 @@ fileOp readFile(String path){
     ret.result = String("error reading file");
   }
   f_close(&file);
+  return ret;
+}
+
+fileOp base64Decode(String encoded) {
+  fileOp ret;
+  ret.ok = true;
+  encoded.replace(" ", "/"); // why
+  const char* encodedCStr = encoded.c_str();
+  uint8_t decoded[BASE64::decodeLength(encodedCStr)+1]={0};
+  BASE64::decode(encodedCStr, decoded);
+  ret.result = String((char*)decoded);
   return ret;
 }

@@ -11,8 +11,8 @@ struct fileOp {
   String result;
 };
 
-// saveFileBase64 attempts to write the file, creating parent directories as
+// saveFile attempts to write the file, creating parent directories as
 // needed. the path should start with '/' and not end with '/'.
-fileOp saveFileBase64(String path, String contents);
-
+fileOp saveFile(String path, String contents);
 fileOp readFile(String path);
+fileOp base64Decode(String encoded);
