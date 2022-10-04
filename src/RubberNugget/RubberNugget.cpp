@@ -244,7 +244,7 @@ void processDuckyScript(String ducky) {
   else if (tCommand.equals("DELAY")) {
     ::display.drawString(3,12,"DELAY: ");
     ::display.drawString(3,22,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
-    ::display.drawXbm(0, 0, 128, 64, reload_bits);
+    ::display.drawXbm(0, 0, 128, 64, cat_with_reload_spinner_image_bits);
     payloadRun.updateDisplay();
     delay(ducky.substring(ducky.indexOf(' ')+1, ducky.length()).toInt()); // delay in MS
     Serial.println("Delayed!");       
@@ -253,14 +253,14 @@ void processDuckyScript(String ducky) {
     ::display.drawString(3,12,"DEFAULT");
     ::display.drawString(3,22,"DELAY:");
     ::display.drawString(3,32,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
-    ::display.drawXbm(0, 0, 128, 64, reload_bits);
+    ::display.drawXbm(0, 0, 128, 64, cat_with_reload_spinner_image_bits);
     payloadRun.updateDisplay();
     defaultDelay = ducky.substring(ducky.indexOf(' ')+1, ducky.length()).toInt();
   }
   else if (tCommand.equals("LED")) {
     ::display.drawString(3,12,"COLOR:");
     ::display.drawString(3,22,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length())); // accept single color parameter
-    ::display.drawXbm(0, 0, 128, 64, reload_bits);
+    ::display.drawXbm(0, 0, 128, 64, cat_with_reload_spinner_image_bits);
     payloadRun.updateDisplay();
     String color = (String) ducky.substring(ducky.indexOf(' ')+1, ducky.length());
     color.toUpperCase();
@@ -294,7 +294,7 @@ void processDuckyScript(String ducky) {
     else {
       ::display.drawString(3,22,String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())));
     }
-    display.drawXbm(0, 0, 128, 64, medium_signal_bits);
+    display.drawXbm(0, 0, 128, 64, cat_with_one_exclamation_point_image_bits);
     payloadRun.updateDisplay();
     Serial.println("String");
     String tmpString = String(ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
@@ -370,7 +370,7 @@ void rPayload (String payloadRaw) {
 
     //manual update display
     payloadSelector.updateDisplay();
-    ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
+    ::display.drawXbm(0, 0, 128, 64, cat_with_exclamation_points_image_bits);
     ::display.display();
     strip.setPixelColor(0, strip.Color(0,0, 0)); 
     strip.show(); strip.show();
@@ -415,7 +415,7 @@ void rPayload (const char* path, uint8_t from) {
     // web vs local
     if (from==0) {
       ::display.clear();
-      ::display.drawXbm(0, 0, 128, 64, high_signal_bits);
+      ::display.drawXbm(0, 0, 128, 64, cat_with_exclamation_points_image_bits);
       ::display.drawString(3,9,"Press DOWN");
       ::display.drawString(3,19,"to go back");
       ::display.drawLine(0, 54, 127, 54);
@@ -541,7 +541,7 @@ bool displayFiles(FILINFO* files, String* currentPath, int numFiles, int selecte
     ::display.drawString(25, 54, *currentPath);
   }
   // Cat image
-  ::display.drawXbm(0, 0, 128, 64, RubberNugget_bits);
+  ::display.drawXbm(0, 0, 128, 64, main_cat_image_bits);
   ::display.drawString(100,0,"v1.1");
   ::display.drawRect(98,0,30,12);
 
