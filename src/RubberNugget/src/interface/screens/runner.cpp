@@ -32,7 +32,7 @@ bool ScriptRunnerScreen::draw() {
     display->clear();
     return true;
   }
-  display->drawXbm(0, 0, 128, 64, high_signal_bits);
+  display->drawXbm(0, 0, 128, 64, cat_with_exclamation_points_image_bits);
   display->drawString(3,9,"Press LEFT");
   display->drawString(3,19,"to go back");
   display->drawLine(0, 54, 127, 54);
@@ -59,7 +59,7 @@ void runPayload(String payload, SH1106Wire* display, Adafruit_NeoPixel* strip) {
     display->clear();
 
     //manually update display
-    display->drawXbm(0, 0, 128, 64, high_signal_bits);
+    display->drawXbm(0, 0, 128, 64, cat_with_exclamation_points_image_bits);
     display->display();
     strip->setPixelColor(0, strip->Color(0,0, 0));
     strip->show(); strip->show();
@@ -103,7 +103,7 @@ void processDuckyScript(String ducky, SH1106Wire* display, Adafruit_NeoPixel* st
   else if (tCommand.equals("DELAY")) {
     display->drawString(3,12,"DELAY: ");
     display->drawString(3,22,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
-    display->drawXbm(0, 0, 128, 64, reload_bits);
+    display->drawXbm(0, 0, 128, 64, cat_with_reload_spinner_image_bits);
     display->display();
     delay(ducky.substring(ducky.indexOf(' ')+1, ducky.length()).toInt()); // delay in MS
     Serial.println("Delayed!");       
@@ -112,14 +112,14 @@ void processDuckyScript(String ducky, SH1106Wire* display, Adafruit_NeoPixel* st
     display->drawString(3,12,"DEFAULT");
     display->drawString(3,22,"DELAY:");
     display->drawString(3,32,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
-    display->drawXbm(0, 0, 128, 64, reload_bits);
+    display->drawXbm(0, 0, 128, 64, cat_with_reload_spinner_image_bits);
     display->display();
     defaultDelay = ducky.substring(ducky.indexOf(' ')+1, ducky.length()).toInt();
   }
   else if (tCommand.equals("LED")) {
     display->drawString(3,12,"COLOR:");
     display->drawString(3,22,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length())); // accept single color parameter
-    display->drawXbm(0, 0, 128, 64, reload_bits);
+    display->drawXbm(0, 0, 128, 64, cat_with_reload_spinner_image_bits);
     display->display();
     String color = (String) ducky.substring(ducky.indexOf(' ')+1, ducky.length());
     color.toUpperCase();
@@ -153,7 +153,7 @@ void processDuckyScript(String ducky, SH1106Wire* display, Adafruit_NeoPixel* st
     else {
       display->drawString(3,22,String(ducky.substring(ducky.indexOf(' ')+1, ducky.length())));
     }
-    display->drawXbm(0, 0, 128, 64, medium_signal_bits);
+    display->drawXbm(0, 0, 128, 64, cat_with_one_exclamation_point_image_bits);
     display->display();
     Serial.println("String");
     String tmpString = String(ducky.substring(ducky.indexOf(' ')+1, ducky.length()));

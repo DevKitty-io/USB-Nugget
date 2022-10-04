@@ -9,8 +9,6 @@
 #include <WebServer.h>
 
 #include "webUI/index.h"
-#include "SH1106Wire.h"
-#include "Nugget_Interface.h"
 
 #include "src/utils.h"
 #include "src/interface/screens/dir.h"
