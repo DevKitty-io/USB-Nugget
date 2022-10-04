@@ -1,26 +1,5 @@
-#define up_btn 9 // left button
-#define dn_btn 18 // right button
-#define lt_btn 11 // left button
-#define rt_btn 7 // right button
-
-#define MAX_FILE_SELECTIONS 4
-    
 #include "RubberNugget.h"
 #include "Arduino.h"
-
-#include "Nugget_Interface.h" // construct Nugget Interface
-#include "Nugget_Buttons.h"
-
-#include "utils.h"
-#include "SH1106Wire.h"
-#include "interface/graphics.h"
-//#include "../keyboardlayout.h"
-
-SH1106Wire display(0x3C, 33, 35);
-
-Nugget_Buttons nuggButtons(up_btn,dn_btn,lt_btn,rt_btn);
-
-extern bool webstuffhappening;
 
 // ESPTinyUSB libraries
 #include "cdcusb.h"
@@ -86,28 +65,10 @@ void echo_all(char c) {
 
 /*-----------------------------------------------------------------*/
 
-Nugget_Interface payloadSelector;
-Nugget_Interface payloadRun;
-
 String networkName;
 String netPassword;
-// char* netname;
-// char* netpass;
   
-RubberNugget::RubberNugget() {
-  
-}
-
 void RubberNugget::init() {
-
-    display.init();
-    display.flipScreenVertically();
-    display.setTextAlignment(TEXT_ALIGN_LEFT);
-    display.clear();
-    display.display();
-
-    
-
   // mount FAT fs
   if (fat1.init("/fat1", "ffat")) {
     
@@ -201,10 +162,6 @@ void RubberNugget::init() {
     keyboard.setBaseEP(3);
     keyboard.begin();
     keyboard.setCallbacks(new MyHIDCallbacks());
-}
-
-void RubberNugget::setDefaults() {
-  
 }
 
 // newFileList returns a paginated list of strings representing the files

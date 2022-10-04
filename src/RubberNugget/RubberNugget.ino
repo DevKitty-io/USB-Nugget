@@ -12,27 +12,10 @@
 #include "SH1106Wire.h"
 #include "Nugget_Interface.h"
 
-// for file streaming
-#include "cdcusb.h"
-#include "mscusb.h"
-#include "flashdisk.h"
-
 #include "src/utils.h"
 #include "src/interface/screens/dir.h"
+#include "src/interface/screens/runner.h"
 #include "src/interface/lib/NuggetInterface.h"
-
-extern SH1106Wire display;
-extern String rubberCss;
-extern String rubberHtml;
-extern String rubberJs;
-extern String createHtml;
-
-extern String payloadPath;
-bool webstuffhappening = false;
-
-extern Nugget_Interface payloadSelector;
-
-Adafruit_NeoPixel strip(1, 12, NEO_RGB + NEO_KHZ800);
 
 const char *ssid = "Nugget AP";
 const char *password = "nugget123";
@@ -66,12 +49,12 @@ void delpayload() {
 void websave() {
   fileOp decodeOp = base64Decode(server.arg("payloadText"));
   if (!decodeOp.ok){
-    server.send(500, "text/plain", op.result);
+    server.send(500, "text/plain", decodeOp.result);
     return;
   }
   fileOp saveOp = saveFile(server.arg("path"), decodeOp.result);
   if (!saveOp.ok){
-    server.send(500, "text/plain", op.result);
+    server.send(500, "text/plain", saveOp.result);
     return;
   }
   server.send(200, "text/plain", "payload saved successfully");
@@ -127,10 +110,6 @@ extern String netPassword;
 extern String networkName;
 
 void setup() {
-  pinMode(12, OUTPUT); 
-  strip.begin(); 
-  delay(500);
-
   Serial.begin(115200);
 
   RubberNugget::init();
@@ -147,7 +126,6 @@ void setup() {
   }
 
   WiFi.softAP(ssid, password);
-  // } 
   IPAddress myIP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(myIP);
@@ -161,11 +139,6 @@ void setup() {
   server.on("/runpayload", HTTP_GET, webrun);
 
   server.begin();
-
-  strip.clear(); 
-  strip.setPixelColor(0, strip.Color(0, 0, 0)); 
-  strip.show();
-  strip.show();
 
   xTaskCreate(webserverInit, "webapptask", 12 * 1024, NULL, 5, &webapp); // create task priority 1
   nuggetInterface = new NuggetInterface;

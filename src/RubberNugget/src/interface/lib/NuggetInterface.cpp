@@ -91,6 +91,8 @@ NuggetInterface::NuggetInterface(){
   nDisplay->setFont(DejaVu_Sans_Mono_10);
   this->display = nDisplay;
   this->currentScreenNode = nullptr;
+
+  pinMode(NEOPIXEL_PIN, OUTPUT);
   this->strip = new Adafruit_NeoPixel(NEOPIXEL_PIN_CNT, NEOPIXEL_PIN, NEO_RGB + NEO_KHZ800);
   this->strip->begin();
 }
