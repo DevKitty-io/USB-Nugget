@@ -112,12 +112,20 @@ bool NuggetInterface::start(){
       delay(10);
       continue;
     }
-    this->draw();
-    int action = this->currentScreenNode->screen->_update();
+    int action = SCREEN_NONE;
+    if (!currentScreenHasRendered) {
+      this->draw();
+      action = this->currentScreenNode->screen->update(EVENT_INIT);
+      this->currentScreenHasRendered = (volatile bool*) true;
+    } else {
+      action = this->currentScreenNode->screen->_update();
+    }
+
     if (action==SCREEN_BACK){
       this->popScreen();
     }
     if (action==SCREEN_REDRAW){
+      this->draw();
     }
     if (action==SCREEN_PUSH){
       this->draw();
@@ -136,8 +144,8 @@ bool NuggetInterface::injectScreen(NuggetScreen* screen){
     return false;
   }
   this->pushScreen(screen);
-  this->draw();
-  this->currentScreenNode->screen->update(EVENT_INIT);
+  //this->draw();
+  //this->currentScreenNode->screen->update(EVENT_INIT);
   xSemaphoreGive(this->screenLock);
 }
 
@@ -154,6 +162,7 @@ bool NuggetInterface::pushScreen(NuggetScreen* screen){
   nextScreenNode->screen = screen;
 
   this->currentScreenNode = nextScreenNode;
+  this->currentScreenHasRendered = (volatile bool*) false;
   return true;
 }
 
@@ -163,6 +172,7 @@ bool NuggetInterface::popScreen(){
   }
   volatile ScreenNode* popped = this->currentScreenNode;
   this->currentScreenNode = this->currentScreenNode->prev;
+  this->currentScreenHasRendered = (volatile bool*) false;
   delete popped->screen;
   delete popped;
 

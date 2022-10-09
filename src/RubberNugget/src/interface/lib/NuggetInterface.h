@@ -90,6 +90,7 @@ class NuggetInterface {
     NuggetInputs* inputs;
     Adafruit_NeoPixel* strip;
     volatile ScreenNode* currentScreenNode;
+    volatile bool* currentScreenHasRendered;
     volatile SemaphoreHandle_t screenLock;
 };
 
