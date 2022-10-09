@@ -93,6 +93,7 @@ void RubberNugget::init() {
   uint16_t size;
   UINT bytesRead;
   long vid; long pid;
+  // TODO: use utils::readFile to read this config file
   // read configuration file
   fr = f_open(&file, ".usbnugget.conf", FA_READ);
 
