@@ -7,31 +7,31 @@ fileOp saveFile(String path, String content) {
   // create parent directories as needed
   FILINFO filinfo;
   int pathSoFarIdx = 1;
-  while(true) {
+  while (true) {
     int nextDir = path.indexOf("/", pathSoFarIdx);
-    if (nextDir == -1){
+    if (nextDir == -1) {
       break;
     }
     String pathSoFar = path.substring(0, nextDir);
-    if (FR_OK != f_stat(pathSoFar.c_str(), &filinfo)){
+    if (FR_OK != f_stat(pathSoFar.c_str(), &filinfo)) {
       if (f_mkdir(pathSoFar.c_str()) != FR_OK) {
         ret.result = String("could not create directory");
         return ret;
       }
     }
-    pathSoFarIdx = nextDir+1;
+    pathSoFarIdx = nextDir + 1;
   }
 
   // Create file
   FIL file;
-  if (FR_OK != f_open(&file, path.c_str(), FA_WRITE | FA_CREATE_ALWAYS)){
+  if (FR_OK != f_open(&file, path.c_str(), FA_WRITE | FA_CREATE_ALWAYS)) {
     ret.result = String("could not open file for writing");
     return ret;
   }
 
   // Write to file
   UINT written = 0;
-  if (FR_OK != f_write(&file, content.c_str(), content.length(), &written)){
+  if (FR_OK != f_write(&file, content.c_str(), content.length(), &written)) {
     f_close(&file);
     ret.result = String("could not write to file");
     return ret;
@@ -41,7 +41,7 @@ fileOp saveFile(String path, String content) {
   return ret;
 }
 
-fileOp readFile(String path){
+fileOp readFile(String path) {
   fileOp ret;
   ret.ok = false;
 
@@ -57,11 +57,11 @@ fileOp readFile(String path){
 
   // read file contents
   uint16_t size = f_size(&file);
-  char* data = (char*) malloc(size+1);
+  char* data = (char*)malloc(size + 1);
   UINT bytesRead;
   fr = f_read(&file, data, (UINT)size, &bytesRead);
 
-  if (fr == FR_OK && bytesRead==size) {
+  if (fr == FR_OK && bytesRead == size) {
     ret.result = String(data);
     ret.result = ret.result.substring(0, bytesRead);
     ret.ok = true;
@@ -77,9 +77,9 @@ fileOp readFile(String path){
 fileOp base64Decode(String encoded) {
   fileOp ret;
   ret.ok = true;
-  encoded.replace(" ", "/"); // why
+  encoded.replace(" ", "/");  // why
   const char* encodedCStr = encoded.c_str();
-  uint8_t decoded[BASE64::decodeLength(encodedCStr)+1]={0};
+  uint8_t decoded[BASE64::decodeLength(encodedCStr) + 1] = {0};
   BASE64::decode(encodedCStr, decoded);
   ret.result = String((char*)decoded);
   return ret;

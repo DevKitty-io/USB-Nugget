@@ -1,10 +1,14 @@
 #pragma once
+
 #include "Arduino.h"
-#include <base64.h>
 #include "base64.hpp"
 #include "cdcusb.h"
-#include "mscusb.h"
 #include "flashdisk.h"
+#include "mscusb.h"
+
+// clang-format off
+#include <base64.h>
+// clang-format on
 
 struct fileOp {
   bool ok;

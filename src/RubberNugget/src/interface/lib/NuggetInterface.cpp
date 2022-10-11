@@ -1,4 +1,5 @@
 #include "NuggetInterface.h"
+
 #include "dejavu.h"
 
 //----------------------------------------
@@ -21,19 +22,19 @@ void NuggetInputs::addButton(int pin) {
 
 int NuggetInputs::getInput() {
   int buttonState;
-  if (this->pressedButton != BTN_NONE){
+  if (this->pressedButton != BTN_NONE) {
     buttonState = digitalRead(this->pressedButton);
-    if (buttonState==BTN_PRESS){
+    if (buttonState == BTN_PRESS) {
       return BTN_NONE;
     }
     this->pressedButton = BTN_NONE;
     return BTN_NONE;
   }
 
-  for (int i = 0; i < BTN_COUNT; i++){
+  for (int i = 0; i < BTN_COUNT; i++) {
     int btn = this->buttons[i];
     buttonState = digitalRead(btn);
-    if (buttonState==BTN_PRESS){
+    if (buttonState == BTN_PRESS) {
       this->pressedButton = btn;
       return btn;
     }
@@ -46,30 +47,20 @@ int NuggetInputs::getInput() {
 //----------------------------------------
 // NuggetScreen
 
-NuggetScreen::NuggetScreen(){
-  this->alwaysUpdate = false;
-}
-void NuggetScreen::setDisplay(SH1106Wire* display){
-  this->display = display;
-}
-void NuggetScreen::setInputs(NuggetInputs* inputs){
-  this->inputs = inputs;
-}
-void NuggetScreen::setStrip(Adafruit_NeoPixel* strip){
-  this->strip = strip;
-}
-void NuggetScreen::setNuggetInterface(NuggetInterface* nI){
+NuggetScreen::NuggetScreen() { this->alwaysUpdate = false; }
+void NuggetScreen::setDisplay(SH1106Wire* display) { this->display = display; }
+void NuggetScreen::setInputs(NuggetInputs* inputs) { this->inputs = inputs; }
+void NuggetScreen::setStrip(Adafruit_NeoPixel* strip) { this->strip = strip; }
+void NuggetScreen::setNuggetInterface(NuggetInterface* nI) {
   this->nuggetInterface = nI;
 }
-void NuggetScreen::pushScreen(NuggetScreen* screen){
+void NuggetScreen::pushScreen(NuggetScreen* screen) {
   this->nuggetInterface->pushScreen(screen);
 }
-void NuggetScreen::alwaysUpdates(bool set){
-  this->alwaysUpdate = set;
-}
-int NuggetScreen::_update(){
+void NuggetScreen::alwaysUpdates(bool set) { this->alwaysUpdate = set; }
+int NuggetScreen::_update() {
   int btn = this->inputs->getInput();
-  if (btn == BTN_NONE && !(this->alwaysUpdate)){
+  if (btn == BTN_NONE && !(this->alwaysUpdate)) {
     delay(2);
     return SCREEN_NONE;
   }
@@ -78,7 +69,7 @@ int NuggetScreen::_update(){
 
 //----------------------------------------
 // NuggetInterface
-NuggetInterface::NuggetInterface(){
+NuggetInterface::NuggetInterface() {
   SH1106Wire* nDisplay = new SH1106Wire(0x3C, 33, 35);
   this->inputs = new NuggetInputs();
   this->screenLock = xSemaphoreCreateMutex();
@@ -93,12 +84,13 @@ NuggetInterface::NuggetInterface(){
   this->currentScreenNode = nullptr;
 
   pinMode(NEOPIXEL_PIN, OUTPUT);
-  this->strip = new Adafruit_NeoPixel(NEOPIXEL_PIN_CNT, NEOPIXEL_PIN, NEO_RGB + NEO_KHZ800);
+  this->strip = new Adafruit_NeoPixel(NEOPIXEL_PIN_CNT, NEOPIXEL_PIN,
+                                      NEO_RGB + NEO_KHZ800);
   this->strip->begin();
 }
 
-NuggetInterface::~NuggetInterface(){
-  while (this->currentScreenNode != nullptr){
+NuggetInterface::~NuggetInterface() {
+  while (this->currentScreenNode != nullptr) {
     this->popScreen();
   }
   delete this->display;
@@ -106,9 +98,9 @@ NuggetInterface::~NuggetInterface(){
   delete this->strip;
 }
 
-bool NuggetInterface::start(){
+bool NuggetInterface::start() {
   while (true) {
-    if (xSemaphoreTake(this->screenLock, 0)==pdFALSE) {
+    if (xSemaphoreTake(this->screenLock, 0) == pdFALSE) {
       delay(10);
       continue;
     }
@@ -116,18 +108,18 @@ bool NuggetInterface::start(){
     if (!currentScreenHasRendered) {
       this->draw();
       action = this->currentScreenNode->screen->update(EVENT_INIT);
-      this->currentScreenHasRendered = (volatile bool*) true;
+      this->currentScreenHasRendered = (volatile bool*)true;
     } else {
       action = this->currentScreenNode->screen->_update();
     }
 
-    if (action==SCREEN_BACK){
+    if (action == SCREEN_BACK) {
       this->popScreen();
     }
-    if (action==SCREEN_REDRAW){
+    if (action == SCREEN_REDRAW) {
       this->draw();
     }
-    if (action==SCREEN_PUSH){
+    if (action == SCREEN_PUSH) {
       this->draw();
       this->currentScreenNode->screen->update(EVENT_INIT);
     }
@@ -138,20 +130,20 @@ bool NuggetInterface::start(){
 // injectScreen pushes a screen onto the stack e.g. from a thread that did
 // not call NuggetInterface::start. This function returns false if the screen
 // could not be locked in wait TICKS
-bool NuggetInterface::injectScreen(NuggetScreen* screen){
-  if (xSemaphoreTake(this->screenLock, 200)==pdFALSE) {
+bool NuggetInterface::injectScreen(NuggetScreen* screen) {
+  if (xSemaphoreTake(this->screenLock, 200) == pdFALSE) {
     // could not acquire lock
     return false;
   }
   this->pushScreen(screen);
-  //this->draw();
-  //this->currentScreenNode->screen->update(EVENT_INIT);
+  // this->draw();
+  // this->currentScreenNode->screen->update(EVENT_INIT);
   xSemaphoreGive(this->screenLock);
 }
 
-bool NuggetInterface::pushScreen(NuggetScreen* screen){
-  if (screen==nullptr) {
-      return false;
+bool NuggetInterface::pushScreen(NuggetScreen* screen) {
+  if (screen == nullptr) {
+    return false;
   }
   screen->setDisplay(this->display);
   screen->setInputs(this->inputs);
@@ -162,17 +154,17 @@ bool NuggetInterface::pushScreen(NuggetScreen* screen){
   nextScreenNode->screen = screen;
 
   this->currentScreenNode = nextScreenNode;
-  this->currentScreenHasRendered = (volatile bool*) false;
+  this->currentScreenHasRendered = (volatile bool*)false;
   return true;
 }
 
-bool NuggetInterface::popScreen(){
-  if (this->currentScreenNode->prev == nullptr){
+bool NuggetInterface::popScreen() {
+  if (this->currentScreenNode->prev == nullptr) {
     return false;
   }
   volatile ScreenNode* popped = this->currentScreenNode;
   this->currentScreenNode = this->currentScreenNode->prev;
-  this->currentScreenHasRendered = (volatile bool*) false;
+  this->currentScreenHasRendered = (volatile bool*)false;
   delete popped->screen;
   delete popped;
 
@@ -180,7 +172,7 @@ bool NuggetInterface::popScreen(){
 }
 
 bool NuggetInterface::draw() {
-  if (this->currentScreenNode == nullptr){
+  if (this->currentScreenNode == nullptr) {
     return false;
   }
   this->display->clear();
