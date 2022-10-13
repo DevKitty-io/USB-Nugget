@@ -11,6 +11,7 @@
 #include "webUI/index.h"
 
 #include "src/utils.h"
+#include "src/interface/screens/splash.h"
 #include "src/interface/screens/dir.h"
 #include "src/interface/screens/runner.h"
 #include "src/interface/lib/NuggetInterface.h"
@@ -141,7 +142,9 @@ void setup() {
   xTaskCreate(webserverInit, "webapptask", 12 * 1024, NULL, 5, &webapp); // create task priority 1
   nuggetInterface = new NuggetInterface;
   NuggetScreen* dirScreen = new DirScreen("/");
+  NuggetScreen* splashScreen = new SplashScreen(1500);
   nuggetInterface->pushScreen(dirScreen);
+  nuggetInterface->pushScreen(splashScreen);
   nuggetInterface->start();
 
 }

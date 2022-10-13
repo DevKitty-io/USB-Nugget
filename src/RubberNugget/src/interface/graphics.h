@@ -10,3 +10,4 @@
 #include "graphics/cat_with_one_exclamation_point_image.h"
 #include "graphics/network_monitor_dash.h"
 #include "graphics/cat_with_reload_spinner_image.h"
+#include "graphics/splash_img.h"
