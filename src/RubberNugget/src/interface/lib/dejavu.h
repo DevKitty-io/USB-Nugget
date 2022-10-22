@@ -1,18 +1,7 @@
-#pragma once
-#include "graphics/Arrow_Left.h"
-#include "graphics/Arrow_Right.h"
-#include "graphics/Navbar_Outline.h"
-#include "graphics/WindowHeader.h"
-#include "graphics/main_cat_image.h"
-#include "graphics/attacked_cat_image.h"
-#include "graphics/cat_with_exclamation_points_image.h"
-#include "graphics/cat_with_dots_image.h"
-#include "graphics/cat_with_one_exclamation_point_image.h"
-#include "graphics/network_monitor_dash.h"
-#include "graphics/cat_with_reload_spinner_image.h"
+#ifndef FONT_DEJAVU_SANS_MONO_10
+#define FONT_DEJAVU_SANS_MONO_10
 
 // Created by http://oleddisplay.squix.ch/ Consider a donation
-
 const uint8_t DejaVu_Sans_Mono_10[] PROGMEM = {
   0x06, // Width: 6
   0x0D, // Height: 13
@@ -469,3 +458,5 @@ const uint8_t DejaVu_Sans_Mono_10[] PROGMEM = {
   0x00,0x00,0xFC,0x0F,0x20,0x02,0x20,0x02,0x20,0x02,0xC0,0x01,  // 254
   0x00,0x00,0x20,0x08,0xC4,0x08,0x00,0x07,0xC4,0x00,0x20  // 255
 };
+
+#endif
