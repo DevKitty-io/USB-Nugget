@@ -46,6 +46,7 @@ class NuggetInterface;
 class NuggetScreen {
    public:
       NuggetScreen();
+      virtual ~NuggetScreen(){};
       virtual bool draw() = 0;
       virtual int update(int){return SCREEN_NONE;};
       void setDisplay(SH1106Wire*);
