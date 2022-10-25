@@ -90,6 +90,7 @@ void processDuckyScript(String ducky, SH1106Wire* display, Adafruit_NeoPixel* st
   uint16_t defaultDelay = 10;
   String tCommand = ducky.substring(0, ducky.indexOf(' ')); // get command
   tCommand.toUpperCase(); tCommand.trim();
+  const KEYMAP* keymap = keyboard.getKeymap();
 
   display->clear();
   display->drawLine(0, 54, 127, 54);
