@@ -49,6 +49,8 @@ int NuggetInputs::getInput() {
 NuggetScreen::NuggetScreen(){
   this->alwaysUpdate = false;
 }
+NuggetScreen::~NuggetScreen(){
+}
 void NuggetScreen::setDisplay(SH1106Wire* display){
   this->display = display;
 }
