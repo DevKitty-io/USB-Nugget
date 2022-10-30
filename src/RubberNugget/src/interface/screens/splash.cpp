@@ -9,7 +9,6 @@ int SplashScreen::update(int button) {
     // update even when there's no keypress
     this->alwaysUpdates(true);
     unsigned int currentTime = millis();
-    Serial.printf("Current time: %lu, end at: %lu", currentTime, this->endAt);
     if (currentTime > this->endAt) {
         return SCREEN_BACK;
     }
