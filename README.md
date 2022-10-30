@@ -39,6 +39,12 @@ To access the web interface, connect to the `RubberNugget` AP with the password 
 - DuckyScript Compatible
     - Basic syntax: `STRING`, `DELAY`, keypress combos
     - Basic colors: `R` `G` `B` `C` `Y` `M` `W`
+    - International keyboard support
+	- German: `LOCALE DE`
+	- US English: `LOCALE EN`
+	- Spanish: `LOCALE ES`
+	- French: `LOCALE FR`
+	- Portuguese: `LOCALE PT`
 - Web Interface 
     - Deploy Payloads
     - Edit Payloads

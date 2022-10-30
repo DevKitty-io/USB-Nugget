@@ -101,6 +101,28 @@ void processDuckyScript(String ducky, SH1106Wire* display, Adafruit_NeoPixel* st
   if (tCommand.equals("REM")) {
     Serial.println("Comment");
   }
+  else if (tCommand.equals("LOCALE")) {
+    String locale = ducky.substring(ducky.indexOf(' ')+1, ducky.length());
+    Serial.printf("Locale:[%s]\n", locale);
+    if (locale == "EN") {
+        keyboard.setKeymap(keymap_us);
+    }
+    else if (locale=="ES") {
+        keyboard.setKeymap(keymap_es);
+    }
+    else if (locale=="DE") {
+        keyboard.setKeymap(keymap_de);
+    }
+    else if (locale=="FR") {
+        keyboard.setKeymap(keymap_fr);
+    }
+    else if (locale=="PT") {
+        keyboard.setKeymap(keymap_pt);
+    }
+    else {
+        Serial.printf("cannot find keyset for: %s\n", locale);
+    }
+  }
   else if (tCommand.equals("DELAY")) {
     display->drawString(3,12,"DELAY: ");
     display->drawString(3,22,(String) ducky.substring(ducky.indexOf(' ')+1, ducky.length()));
@@ -178,11 +200,11 @@ void processDuckyScript(String ducky, SH1106Wire* display, Adafruit_NeoPixel* st
       }
       currentToken = ducky.substring(currentTokenLeftIndex, currentTokenRightIndex);
       if (currentToken == "CTRL" || currentToken == "CONTROL"){
-        modifiers += KEY_CTRL;
+        modifiers += KEY_MOD_LCTRL;
       } else if (currentToken == "SHIFT"){
-        modifiers += KEY_SHIFT;
+        modifiers += KEY_MOD_LSHIFT;
       } else if (currentToken == "ALT") {
-        modifiers += KEY_ALT;
+        modifiers += KEY_MOD_LALT;
       } else if (currentToken.length() != 1) {
         // Search for named key, e.g. DELETE or TAB
         if (keyKnown(currentToken)){
