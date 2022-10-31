@@ -22,16 +22,13 @@ ifeq ($(RESET_SCRIPTS_DURING_FLASH), true)
 endif
 	docker rm --force $(CONTAINER_NAME)
 
-generate_img: check-port build
-	docker create --name $(CONTAINER_NAME) --device=$(PORT) -t rubber-nugget:latest
+generate_bin: build
+	docker create --name $(CONTAINER_NAME) -t rubber-nugget:latest
 	docker start $(CONTAINER_NAME)
-	docker exec $(CONTAINER_NAME) bash -c \
-		'python3 -m esptool --after no_reset erase_flash && sleep 2 && \
-		./arduino-cli upload -b esp32:esp32:esp32s2 --port $(PORT) RubberNugget/ && sleep 2 && \
-		python3 -m esptool --after no_reset write_flash 0x110000 default.img && sleep 2 && \
-		python3 -m esptool --after no_reset read_flash 0x0 0x400000 /rubber_nugget.bin'
-	docker cp $(CONTAINER_NAME):/rubber_nugget.bin .
+	docker cp $(CONTAINER_NAME):/app/build .
 	docker rm --force $(CONTAINER_NAME)
+	cp usb_nugget_bin_template usb_nugget.bin
+	dd of=usb_nugget.bin if=build/RubberNugget.ino.bin seek=65536 bs=1 conv=notrunc
 
 check-port:
 	@ls $(PORT) || { echo "Device not found at $(PORT)" && exit 1; }
