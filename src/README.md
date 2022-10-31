@@ -28,7 +28,7 @@ sudo make flash
 #optionally install default scripts: sudo make flash RESET_SCRIPTS_DURING_FLASH=true
 
 # Produce .img for release
-sudo make generate_img
+sudo make generate_bin
 ```
 
 ### macOS
