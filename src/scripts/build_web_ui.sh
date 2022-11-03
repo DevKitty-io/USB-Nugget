@@ -12,7 +12,8 @@ fileToProgmem() {
     echo "#pragma once"
     xxd -i "$file" \
         | sed "s/.*\[\].*/const char $varname\[\] PROGMEM = {/g" \
-        | sed -E "s/unsigned int.*( = .*)/const int ${varname}_len\1/g"
+        | sed -E "s/unsigned int.*( = .*)/const int ${varname}_len\1/g" \
+        | sed -E 's/(.*0x..$.*)/\1, 0x00/g' # add null terminator
 }
 
 for file in $(find ../RubberNugget/webUI -type f); do
