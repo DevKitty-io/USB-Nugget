@@ -205,7 +205,11 @@ void processDuckyScript(String ducky, SH1106Wire* display, Adafruit_NeoPixel* st
         modifiers += KEY_MOD_LSHIFT;
       } else if (currentToken == "ALT") {
         modifiers += KEY_MOD_LALT;
-      } else if (currentToken.length() != 1) {
+      } else if (currentToken== "GUI" or currentToken =="WINDOWS"){
+        modifiers += KEY_MOD_LMETA;
+      }
+      
+      else if (currentToken.length() != 1) {
         // Search for named key, e.g. DELETE or TAB
         if (keyKnown(currentToken)){
           pressNamedKey(currentToken, modifiers);
