@@ -20,7 +20,7 @@ int SplashScreen::update(int button) {
 
 bool SplashScreen::draw() {
   display->drawXbm(0, 0, 128, 64, splash_bits);
-  display->drawString(100,0,"v1.2");
-  display->drawRect(98,0,30,12);
+  display->drawString(94,0,"1.2.1");
+  display->drawRect(92,0,36,12);
   return true;
 }
