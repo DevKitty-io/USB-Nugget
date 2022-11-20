@@ -153,6 +153,11 @@
                 background-position: center top;
                 background-size: 75% auto;
             }
+
+            #deletePayloadButton, #cancelDeletePayloadButton {
+                font-size: 1.2rem;
+                padding: 7px;
+            }
         </style>
     </head>
     <body>
@@ -175,6 +180,12 @@
             <textarea id="createPayloadContent" rows="10" placeholder="Enter payload"></textarea>
             <button id="createSaveButton">SAVE FILE</button>
             <button id="createRunLiveButton">RUN LIVE</button>
+        </section>
+        <section id="confirm-delete">
+            <h2>DELETE PAYLOAD?</h2>
+            <p>Are you sure you want to delete the payload?</p>
+            <button id="deletePayloadButton">DELETE PAYLOAD</button>
+            <button id="cancelDeletePayloadButton">CANCEL</button>
         </section>
         <section id="edit">
             <h2>EDIT PAYLOAD</h2>
@@ -355,6 +366,20 @@
             }
             saveBtn.onclick = ()=>{
                 savePayload(payloadPath, payloadContentElem.value)
+            }
+            deleteBtn.onclick = ()=>{
+                //deletePayload(payloadPath)
+                switchToConfirmDelete(payloadPath);
+            }
+        }
+        function switchToConfirmDelete(payloadPath) {
+            window.location.hash="confirm-delete"
+            
+            let cancelBtn = document.getElementById("cancelDeletePayloadButton");
+            let deleteBtn = document.getElementById("deletePayloadButton");
+
+            cancelBtn.onclick = ()=>{
+                switchToEdit(payloadPath)
             }
             deleteBtn.onclick = ()=>{
                 deletePayload(payloadPath)
