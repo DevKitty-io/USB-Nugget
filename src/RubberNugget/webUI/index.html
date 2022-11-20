@@ -153,11 +153,6 @@
                 background-position: center top;
                 background-size: 75% auto;
             }
-
-            #deletePayloadButton, #cancelDeletePayloadButton {
-                font-size: 1.2rem;
-                padding: 7px;
-            }
         </style>
     </head>
     <body>
@@ -357,6 +352,9 @@
             xmlHttp.send(null);
             console.log(atob(xmlHttp.responseText))
             payloadContentElem.value = atob(xmlHttp.responseText)
+            if(atob(xmlHttp.responseText).length == 0) {
+                payloadContentElem.setAttribute('placeholder', 'Begin writing your payload...')
+            }
 
             let saveBtn = document.getElementById("editSaveButton");
             let runBtn = document.getElementById("editRunLiveButton");
