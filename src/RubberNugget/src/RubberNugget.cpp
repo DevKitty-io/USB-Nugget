@@ -1,5 +1,8 @@
-#include "RubberNugget.h"
 #include "Arduino.h"
+#include <WiFi.h>
+
+#include "RubberNugget.h"
+#include "utils.h"
 
 // ESPTinyUSB libraries
 #include "cdcusb.h"
@@ -65,11 +68,17 @@ void echo_all(char c) {
 
 /*-----------------------------------------------------------------*/
 
-String networkName;
-String netPassword;
-  
+
 void RubberNugget::init() {
-  // mount FAT fs
+  NuggetConfig c = getConfig();
+
+  // Init AP
+  WiFi.softAP(c.network.c_str(), c.password.c_str());
+  IPAddress myIP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(myIP);
+
+  // Mount FAT fs
   if (fat1.init("/fat1", "ffat")) {
     
         //disable this on startup
@@ -79,90 +88,17 @@ void RubberNugget::init() {
         else {
             log_e("LUN 1 failed");
         }
-    }
+  }
+  if (!CDCUSBSerial.begin())
+      Serial.println("Failed to start CDC USB stack");
+  CDCUSBSerial.setCallbacks(new MyCDCCallbacks());
+  EspTinyUSB::registerDeviceCallbacks(new Device());
 
-    if (!CDCUSBSerial.begin())
-        Serial.println("Failed to start CDC USB stack");
-
-    CDCUSBSerial.setCallbacks(new MyCDCCallbacks());
-    EspTinyUSB::registerDeviceCallbacks(new Device());
-
-    /******/
-    FRESULT fr;            
-  FIL file; 
-  uint16_t size;
-  UINT bytesRead;
-  long vid; long pid;
-  // TODO: use utils::readFile to read this config file
-  // read configuration file
-  fr = f_open(&file, ".usbnugget.conf", FA_READ);
-
-      if (fr == FR_OK) {
-        size = f_size(&file);
-        char * data = NULL;
-
-        data = (char*) malloc(size);
-        Serial.printf("File size: %d bytes", size);
-
-        fr = f_read(&file, data, (UINT) size, &bytesRead);
-        if (fr == FR_OK){
-            Serial.println("Config successfully read!");
-            String currentLine;
-            bool pidEn = false;
-            
-            for (int i=0; i < bytesRead; i++) {
-                if (data[i] == 0x0a) {
-
-                  if(currentLine.indexOf("vid") >= 0) {
-                    // strip string after colon delimiter and convert to hex
-                    String vidString = currentLine.substring(currentLine.indexOf(":")+1,currentLine.length());
-                    char tab2[vidString.length() + 1];
-                    strcpy(tab2, vidString.c_str());
-                    
-                    char* ptr;
-                    
-                    vid = strtoul(tab2, &ptr, 16);
-                    pidEn = true;
-                  }
-                  
-                  if (currentLine.indexOf("pid") >= 0 && pidEn) {
-                    // display.clear();
-
-                    String pidString = currentLine.substring(currentLine.indexOf(":")+1,currentLine.length());
-                    char tab2[pidString.length() + 1];
-                    strcpy(tab2, pidString.c_str());
-                    
-                    char* ptr;
-                    
-                    pid = strtoul(tab2, &ptr, 16);
-                  }
-
-                  if (currentLine.indexOf("network") >=0) {
-                    networkName = currentLine.substring(currentLine.indexOf(":")+1,currentLine.length());
-                    // networkName.trim();
-                  }
-                  
-                  if (currentLine.indexOf("password") >=0) {
-                    netPassword = currentLine.substring(currentLine.indexOf(":")+1,currentLine.length());
-                    // netPassword.trim();
-                  }
-
-                  currentLine = "";
-                }
-
-
-                currentLine+=data[i];
-            }
-        }
-        free(data); // free allocated memory when you don't need it
-
-        f_close(&file);
-    }
-
-    keyboard.deviceID(vid,pid);
-    keyboard.setBaseEP(3);
-    keyboard.begin();
-    keyboard.setCallbacks(new MyHIDCallbacks());
+  // Setup keyboard
+  keyboard.deviceID(c.vid,c.pid);
+  keyboard.setBaseEP(3);
+  keyboard.begin();
+  keyboard.setCallbacks(new MyHIDCallbacks());
 }
 
 // newFileList returns a paginated list of strings representing the files
@@ -268,4 +204,67 @@ String* RubberNugget::allPayloadPaths(const char* path) {
   }
   delete[] files;
   return ret;
+}
+
+NuggetConfig getConfig() {
+  NuggetConfig conf;
+  conf.locale = "EN";
+  conf.network = "Nugget AP";
+  conf.password = "nugget123";
+  conf.pid = 0x20b;
+  conf.vid = 0x05ac;
+
+  fileOp configRead = readFile(".usbnugget.conf");
+  if (!configRead.ok) {
+    Serial.printf("config file could not be read: %s\n", configRead.result);
+    return conf;
+  }
+
+  int lineStart = 0;
+  String currentLine;
+  String currentLineKeyValue;
+  while (lineStart < configRead.result.length()) {
+    int lineEnd = configRead.result.indexOf('\n', lineStart);
+    if (lineEnd == -1){
+      lineEnd = configRead.result.length();
+      break;
+    }
+
+    // process line
+    currentLine = configRead.result.substring(lineStart, lineEnd);
+    currentLine.trim();
+    int valueStart = currentLine.indexOf("\"");
+    int valueEnd = currentLine.lastIndexOf("\"");
+    if (valueStart == -1 || valueStart==valueEnd) {
+      // couldn't find both quotes
+      goto nextLine;
+    }
+    currentLineKeyValue = currentLine.substring(valueStart+1, valueEnd);
+
+    if (currentLine.indexOf("network = \"") == 0) {
+      conf.network = currentLineKeyValue;
+    } else
+    if (currentLine.indexOf("password = \"") == 0) {
+      if (currentLineKeyValue.length() < 8) {
+        goto nextLine;
+      }
+      conf.password = currentLineKeyValue;
+    } else
+    if (currentLine.indexOf("pid = \"") == 0) {
+        char hex[currentLineKeyValue.length() + 1];
+        strcpy(hex, currentLineKeyValue.c_str());
+        char* ptr;
+        conf.pid = strtoul(hex, &ptr, 16);
+    } else
+    if (currentLine.indexOf("vid = \"") == 0) {
+        char hex[currentLineKeyValue.length() + 1];
+        strcpy(hex, currentLineKeyValue.c_str());
+        char* ptr;
+        conf.vid = strtoul(hex, &ptr, 16);
+    }
+nextLine:
+    // update line
+    lineStart = lineEnd+1;
+  }
+  return conf;
 }

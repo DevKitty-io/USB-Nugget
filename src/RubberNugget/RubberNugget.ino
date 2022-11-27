@@ -4,7 +4,6 @@
 #include <base64.h>
 #include "base64.hpp"
 
-#include <WiFi.h>
 #include <WiFiClient.h>
 #include <WebServer.h>
 
@@ -105,30 +104,11 @@ void webserverInit(void *p) {
   }
 }
 
-extern String netPassword;
-extern String networkName;
-
 void setup() {
   Serial.begin(115200);
 
   RubberNugget::init();
  
-  if (networkName.length() >0) {
-    Serial.println(networkName);
-    const char * c = networkName.c_str();
-    ssid=c;
-  }
-  if (netPassword.length() >=8) {
-    Serial.println(netPassword);
-    const char * d = netPassword.c_str();
-    password=d;
-  }
-
-  WiFi.softAP(ssid, password);
-  IPAddress myIP = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
-  Serial.println(myIP);
-
   server.on("/", handleRoot);
   server.on("/payloads", getPayloads);
   server.on("/savepayload", HTTP_POST, websave);
