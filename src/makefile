@@ -29,6 +29,7 @@ generate_bin: build
 	docker rm --force $(CONTAINER_NAME)
 	cp usb_nugget_bin_template usb_nugget.bin
 	dd of=usb_nugget.bin if=build/RubberNugget.ino.bin seek=65536 bs=1 conv=notrunc
+	dd of=usb_nugget.bin if=fatfs/default.img seek=1114112 bs=1 conv=notrunc count=3080192
 
 check-port:
 	@ls $(PORT) || { echo "Device not found at $(PORT)" && exit 1; }
