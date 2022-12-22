@@ -1,4 +1,4 @@
-name: RubberNugget CI
+name: USB-Nugget build
 
 on:
   push:
@@ -17,4 +17,3 @@ jobs:
       run: |
         cd src
         make build
-

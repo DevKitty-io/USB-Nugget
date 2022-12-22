@@ -1,4 +1,4 @@
-name: RubberNugget CI
+name: USB-Nugget build skipper
 
 on:
   push:

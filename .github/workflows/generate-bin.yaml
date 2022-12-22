@@ -1,0 +1,21 @@
+name: USB-Nugget generate binary
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  generate-bin:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Generate flashable binary
+      run: |
+        cd src
+        make generate_bin
+    - uses: actions/upload-artifact@v3
+      with:
+        name: usb_nugget_${{ github.sha }}.bin
+        path: src/usb_nugget.bin
