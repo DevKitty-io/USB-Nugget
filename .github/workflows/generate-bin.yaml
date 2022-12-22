@@ -16,4 +16,4 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: usb_nugget_${GITHUB_SHA}.bin
-        path: usb_nugget.bin
+        path: src/usb_nugget.bin
