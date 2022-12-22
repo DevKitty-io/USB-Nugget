@@ -2,7 +2,7 @@ name: RubberNugget CI
 
 on:
   push:
-    branches: [ main, bp-dev ]
+    branches: [ main, bp-dev, autogen-nugget-bin ]
     paths: [ "src/**" ]
   pull_request:
     branches: [ main, bp-dev ]
@@ -18,3 +18,15 @@ jobs:
         cd src
         make build
 
+  generate-bin:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Generate flashable binary
+      run: |
+        cd src
+        make generate_bin
+    - uses: actions/upload-artifact@v3
+      with:
+        name: usb-nugget.bin
+        path: src/usb_nugget.bin
