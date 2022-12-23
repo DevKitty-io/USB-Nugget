@@ -70,17 +70,8 @@ void echo_all(char c) {
 
 
 void RubberNugget::init() {
-  NuggetConfig c = getConfig();
-
-  // Init AP
-  WiFi.softAP(c.network.c_str(), c.password.c_str());
-  IPAddress myIP = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
-  Serial.println(myIP);
-
   // Mount FAT fs
   if (fat1.init("/fat1", "ffat")) {
-    
         //disable this on startup
         if (fat1.begin()) {
             Serial.println("MSC lun 1 begin");
@@ -93,6 +84,15 @@ void RubberNugget::init() {
       Serial.println("Failed to start CDC USB stack");
   CDCUSBSerial.setCallbacks(new MyCDCCallbacks());
   EspTinyUSB::registerDeviceCallbacks(new Device());
+
+  // Read config from settings file
+  NuggetConfig c = getConfig();
+
+  // Init AP
+  WiFi.softAP(c.network.c_str(), c.password.c_str());
+  IPAddress myIP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(myIP);
 
   // Setup keyboard
   keyboard.deviceID(c.vid,c.pid);
