@@ -1,0 +1,9 @@
+CTRL ALT T
+DELAY 1000
+STRING wget https://gist.githubusercontent.com/AlexLynd/2f8081f1940934e19a5a450ca358d142/raw/b6d4bfe05cb73f8140872448da54fb1824c4d627/linux-color-flasher.sh
+ENTER
+DELAY 500
+STRING chmod +x linux-color-flasher.sh 
+ENTER
+STRING ./linux-color-flasher.sh &
+ENTER
