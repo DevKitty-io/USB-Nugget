@@ -8,6 +8,9 @@
 #include <WiFiClient.h>
 #include <WebServer.h>
 
+#include <ESPmDNS.h>
+#include <DNSServer.h>
+
 #include "webUI/index.h"
 
 #include "src/utils.h"
@@ -20,6 +23,7 @@ const char *ssid = "Nugget AP";
 const char *password = "nugget123";
 
 WebServer server(80);
+DNSServer dns;
 
 TaskHandle_t webapp;
 TaskHandle_t nuggweb;
@@ -100,6 +104,7 @@ void webrunlive() {
 
 void webserverInit(void *p) {
   while (1) {
+    dns.processNextRequest();
     server.handleClient();
     vTaskDelay(2);
   }
@@ -129,6 +134,12 @@ void setup() {
   Serial.print("AP IP address: ");
   Serial.println(myIP);
 
+  dns.setErrorReplyCode(DNSReplyCode::NoError);
+  dns.start(53, "*", myIP);
+
+  MDNS.begin("usb.nugget");
+  Serial.println("mDNS responder started");
+
   server.on("/", handleRoot);
   server.on("/payloads", getPayloads);
   server.on("/savepayload", HTTP_POST, websave);
@@ -138,6 +149,8 @@ void setup() {
   server.on("/runpayload", HTTP_GET, webrun);
 
   server.begin();
+
+  MDNS.addService("http", "tcp", 80);
 
   xTaskCreate(webserverInit, "webapptask", 12 * 1024, NULL, 5, &webapp); // create task priority 1
   nuggetInterface = new NuggetInterface;
