@@ -24,15 +24,17 @@ To access the web interface, connect to `Nugget AP` with the password `nugget123
 ## Updating AP Credentials & Keyboard ID
 To edit your USB Nugget's default AP name & password, edit or create the `.usbnugget.conf` file on your NUGGET drive, and add the following 2 lines:
 ```
-network: network_name_here
-password: password_here
+network = "Nugget AP"
+password = "nugget123"
 ```
 To change the VID and PID of the keyboard, you can just add:
 ```
-vid:0x1234
-pid:0x1234
+vid = "0x05ac"
+pid = "0x20b"
 ```
 
+If `.usbnugget.conf` is not present or contains invalid entries, the above
+settings will be used.
 
 ## Current Features
 

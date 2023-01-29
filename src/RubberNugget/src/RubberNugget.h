@@ -12,4 +12,13 @@ class RubberNugget {
     static String* allPayloadPaths(const char* path="/");
 };
 
+struct NuggetConfig {
+  String locale;
+  String network;
+  String password;
+  long pid;
+  long vid;
+};
+
 FILINFO* newFileList(const char* path, int& numFiles);
+NuggetConfig getConfig();
