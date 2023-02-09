@@ -63,7 +63,7 @@ check-mac-port:
 	@ls $(MAC_PORT) || { echo "Device not found at $(MAC_PORT)" && exit 1; }
 
 mac-build: submodules
-	sudo docker build . --file Dockerfile --build-arg ARDUINO_CLI_VERSION=$(ARDUINO_CLI_VERSION) --tag rubber-nugget
+	sudo docker build . --file Dockerfile --build-arg FATFS_OUTPUT_FILE=$(FATFS) --build-arg FATFS_FROM_DIR=default --build-arg ARDUINO_CLI_VERSION=$(ARDUINO_CLI_VERSION) --tag rubber-nugget
 
 flash-on-mac: check-mac-port check-mac-deps arduino-cli mac-build
 	sudo docker create --name $(CONTAINER_NAME) -t rubber-nugget:latest
