@@ -21,7 +21,7 @@ flash: check-port build
 		'./arduino-cli upload -b esp32:esp32:esp32s2 --port $(PORT) RubberNugget/ && sleep 2'
 ifeq ($(RESET_SCRIPTS_DURING_FLASH), true)
 	docker exec $(CONTAINER_NAME) bash -c \
-		'python3 -m esptool --after no_reset write_flash 0x111000 $(FATFS)'
+		'python3 -m esptool --after no_reset write_flash 0x111000 build/$(FATFS)'
 endif
 	docker rm --force $(CONTAINER_NAME)
 
@@ -70,7 +70,7 @@ flash-on-mac: check-mac-port check-mac-deps arduino-cli mac-build
 	sudo docker cp $(CONTAINER_NAME):/app/build .
 	sudo docker rm --force $(CONTAINER_NAME)
 ifeq ($(RESET_SCRIPTS_DURING_FLASH), true)
-	python3 -m esptool --after no_reset write_flash 0x110000 fatfs/$(FATFS)
+	python3 -m esptool --after no_reset write_flash 0x111000 build/$(FATFS)
 endif
 	{ sudo ./scripts/arduino-cli upload -b esp32:esp32:esp32s2 --port $(MAC_PORT) --config-file arduino-cli-mac.yaml --input-dir build; } || echo \
 		'If you get the error: "esptool.py can not exit the download mode over USB..." this is a bug in arduino-cli and can be ignored'
