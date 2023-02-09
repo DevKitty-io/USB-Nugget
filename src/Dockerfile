@@ -3,12 +3,13 @@ FROM debian:buster
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
-    wget \
-    zip \
     bsdmainutils \
-    xz-utils \
+    mtools \
+    python3 python3-pip \
+    wget \
     xxd \
-    python3 python3-pip
+    xz-utils \
+    zip
 RUN pip3 install pyserial esptool==4.2.1
 
 ARG ARDUINO_CLI_VERSION=0.22.0
@@ -31,9 +32,13 @@ RUN ./third_party/arduino_cli_install.sh $(readlink -f ./arduino-cli)
 RUN sed -i '/.*args = parser.parse_args(argv)/a\ \ \ \ args.after="no_reset"' $(grep -r parser.parse_args /root/.arduino15/packages/esp32/tools/esptool_py/ -l)
 
 COPY RubberNugget ./RubberNugget
-COPY fatfs/default.img .
+COPY fatfs ./fatfs
 COPY scripts ./scripts
 RUN ./scripts/build_web_ui.sh
+ARG FATFS_OUTPUT_FILE
+ARG FATFS_FROM_DIR
+RUN mkdir build
+RUN OUTPUT_FILE=${FATFS_OUTPUT_FILE} DIR=${FATFS_FROM_DIR} ./fatfs/generate_fs.sh && mv ./fatfs/${FATFS_OUTPUT_FILE} ./build
 RUN ./arduino-cli compile -b esp32:esp32:esp32s2 RubberNugget \
     --build-property build.partitions=noota_3gffat \
     --build-property build.cdc_on_boot=1 \

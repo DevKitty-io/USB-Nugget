@@ -1,0 +1,8 @@
+CTRL ALT T
+DELAY 1000
+STRING firefox "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+ENTER
+DELAY 4000
+SPACE
+DELAY 1000
+STRING F

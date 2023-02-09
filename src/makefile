@@ -4,12 +4,15 @@ IMAGE_NAME = rubber-nugget
 CONTAINER_NAME := $(IMAGE_NAME)-$(shell date +%s)
 ARDUINO_CLI_VERSION = 0.22.0
 
+# File system name to generate
+FATFS ?= fatfs.img
+
 submodules:
 	git submodule init
 	git submodule update
 
 build: submodules
-	docker build . --file Dockerfile --build-arg ARDUINO_CLI_VERSION=$(ARDUINO_CLI_VERSION) --tag rubber-nugget
+	docker build . --file Dockerfile --build-arg FATFS_OUTPUT_FILE=$(FATFS) --build-arg FATFS_FROM_DIR=default --build-arg ARDUINO_CLI_VERSION=$(ARDUINO_CLI_VERSION) --tag rubber-nugget
 
 flash: check-port build
 	docker create --name $(CONTAINER_NAME) --device=$(PORT) -t rubber-nugget:latest
@@ -18,7 +21,7 @@ flash: check-port build
 		'./arduino-cli upload -b esp32:esp32:esp32s2 --port $(PORT) RubberNugget/ && sleep 2'
 ifeq ($(RESET_SCRIPTS_DURING_FLASH), true)
 	docker exec $(CONTAINER_NAME) bash -c \
-		'python3 -m esptool --after no_reset write_flash 0x110000 default.img'
+		'python3 -m esptool --after no_reset write_flash 0x111000 build/$(FATFS)'
 endif
 	docker rm --force $(CONTAINER_NAME)
 
@@ -29,7 +32,7 @@ generate_bin: build
 	docker rm --force $(CONTAINER_NAME)
 	cp usb_nugget_bin_template usb_nugget.bin
 	dd of=usb_nugget.bin if=build/RubberNugget.ino.bin seek=65536 bs=1 conv=notrunc
-	dd of=usb_nugget.bin if=fatfs/default.img seek=1114112 bs=1 conv=notrunc count=3080192
+	dd of=usb_nugget.bin if=build/$(FATFS) seek=1118208 bs=1 conv=notrunc count=3076096
 
 check-port:
 	@ls $(PORT) || { echo "Device not found at $(PORT)" && exit 1; }
@@ -60,14 +63,14 @@ check-mac-port:
 	@ls $(MAC_PORT) || { echo "Device not found at $(MAC_PORT)" && exit 1; }
 
 mac-build: submodules
-	sudo docker build . --file Dockerfile --build-arg ARDUINO_CLI_VERSION=$(ARDUINO_CLI_VERSION) --tag rubber-nugget
+	sudo docker build . --file Dockerfile --build-arg FATFS_OUTPUT_FILE=$(FATFS) --build-arg FATFS_FROM_DIR=default --build-arg ARDUINO_CLI_VERSION=$(ARDUINO_CLI_VERSION) --tag rubber-nugget
 
 flash-on-mac: check-mac-port check-mac-deps arduino-cli mac-build
 	sudo docker create --name $(CONTAINER_NAME) -t rubber-nugget:latest
 	sudo docker cp $(CONTAINER_NAME):/app/build .
 	sudo docker rm --force $(CONTAINER_NAME)
 ifeq ($(RESET_SCRIPTS_DURING_FLASH), true)
-	python3 -m esptool --after no_reset write_flash 0x110000 fatfs/default.img
+	python3 -m esptool --after no_reset write_flash 0x111000 build/$(FATFS)
 endif
 	{ sudo ./scripts/arduino-cli upload -b esp32:esp32:esp32s2 --port $(MAC_PORT) --config-file arduino-cli-mac.yaml --input-dir build; } || echo \
 		'If you get the error: "esptool.py can not exit the download mode over USB..." this is a bug in arduino-cli and can be ignored'
